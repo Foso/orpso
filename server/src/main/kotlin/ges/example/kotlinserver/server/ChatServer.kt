@@ -251,6 +251,7 @@ class ChatServer {
             }
             ServerCommands.MESSAGE -> TODO()
             ServerCommands.RESET -> {
+                members.clear()
                 game.reset()
                 val json2 = ClientEvent.NewGame().toJson()
                 broadcast(json2)
