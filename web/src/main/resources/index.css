@@ -52,10 +52,7 @@ vertical-align: middle;
 
 }
 
-@font-face {
-  font-family: myFirstFont;
-  src: url(./font/PlakLT-BlackCondensed.woff);
-}
+
 
 img{
  right: 0;
