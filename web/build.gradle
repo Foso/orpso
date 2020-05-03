@@ -63,6 +63,8 @@ dependencies {
     implementation(npm('core-js', ''))
     implementation(npm('inline-style-prefixer', ''))
     implementation(npm('styled-components', ''))
+    implementation(npm('uglifyjs-webpack-plugin', ''))
+
     // dependency('react-star-wars-crawl')
     //  dependency('react', libs.react_version)
     implementation(npm('react-dom', libs.react_version))

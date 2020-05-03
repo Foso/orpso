@@ -15,7 +15,7 @@ class GameApiHandler {
     fun start(observer: NetworkApiObserver) {
         this.observer = observer
 
-        socket = org.w3c.dom.WebSocket("ws://hidden-plateau-72953.herokuapp.com/tictactoe")
+        socket = org.w3c.dom.WebSocket("wss://hidden-plateau-72953.herokuapp.com/tictactoe")
 
         socket?.onmessage = { event: Event ->
             onMessage((event as MessageEvent))

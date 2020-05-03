@@ -1,4 +1,4 @@
-package challenge.ui
+package tictactoe.ui
 
 import Application
 
