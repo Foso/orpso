@@ -31,8 +31,10 @@ class ChatApplication {
     }
 
     fun start() {
-        println("SERVER STARTED")
         val port = System.getenv("PORT")?.toInt() ?: 23567
+        println("SERVER STARTED on port: "+port)
+
+
         embeddedServer(Netty, port) {
             install(ContentNegotiation) {
                 gson {
