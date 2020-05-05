@@ -2,6 +2,7 @@ package tictactoe.ui.home
 
 import challenge.usecase.MessageUseCase
 import de.jensklingenberg.sheasy.model.Coord
+import kotlinx.html.DIV
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.style
 import react.RBuilder
@@ -72,64 +73,72 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
             }
 
             div("container") {
-                div("content") {
-                    table("mytable2") {
-                        tbody {
-                            state.map.forEachIndexed { index, columns ->
-                                tr {
-                                    columns.forEachIndexed { index2, _ ->
-                                        td {
-                                            img {
-                                                attrs {
-                                                    height = "50"
-                                                    width = "50"
-                                                    if (state.map[index][index2] != "-") {
-                                                        src = when (state.map[index][index2]) {
-                                                            "0" -> "images/ximg.png"
-                                                            "1" -> "images/oimg.png"
-                                                            else -> ""
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                gameField()
 
-                div("overlay") {
-                    table("mytable") {
-
-                        tbody {
-                            state.map.forEachIndexed { index, columns ->
-                                tr {
-                                    columns.forEachIndexed { index2, _ ->
-                                        td {
-                                            img {
-                                                attrs {
-                                                    height = "50"
-                                                    width = "50"
-                                                    onClickFunction = {
-                                                        presenter.onCellClicked(Coord(index, index2))
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                gameOverlay()
             }
 
             p {
                 +state.gameStateText
             }
 
+        }
+    }
+
+    private fun RDOMBuilder<DIV>.gameOverlay() {
+        div("overlay") {
+            table("mytable") {
+
+                tbody {
+                    state.map.forEachIndexed { index, columns ->
+                        tr {
+                            columns.forEachIndexed { index2, _ ->
+                                td {
+                                    img {
+                                        attrs {
+                                            height = "50"
+                                            width = "50"
+                                            onClickFunction = {
+                                                presenter.onCellClicked(Coord(index, index2))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun RDOMBuilder<DIV>.gameField() {
+        div("gameDiv") {
+            table("mytable2") {
+                tbody {
+                    state.map.forEachIndexed { index, columns ->
+                        tr {
+                            columns.forEachIndexed { index2, _ ->
+                                td {
+                                    img {
+                                        attrs {
+                                            height = "50"
+                                            width = "50"
+                                            if (state.map[index][index2] != "-") {
+                                                src = when (state.map[index][index2]) {
+                                                    "0" -> "images/ximg.png"
+                                                    "1" -> "images/oimg.png"
+                                                    else -> ""
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

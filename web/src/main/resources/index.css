@@ -92,7 +92,7 @@ background-color: 1b66b3;
   display: grid;
 }
 
-.content, .overlay {
+.gameDiv, .overlay {
   grid-area: 1 / 1;
 }
 
