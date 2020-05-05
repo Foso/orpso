@@ -1,9 +1,8 @@
 package ges.example.kotlinserver.server
 
-import com.squareup.moshi.Moshi
 import de.jensklingenberg.sheasy.model.*
-import ges.example.kotlinserver.game.GameDataSource
-import ges.example.kotlinserver.game.GameRepository
+import ges.example.kotlinserver.game.RpsGameContract
+import ges.example.kotlinserver.game.RpsGamePresenter
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.WebSocketSession
@@ -16,15 +15,15 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
+
 /**
  * Class in charge of the logic of the chat server.
  * It contains handlers to events and commands to send messages to specific users in the server.
  */
-class ChatServer {
-    val moshi = Moshi.Builder().build()
+class ChatServer : RpsGameContract.RpsGameServer {
 
-    val game: GameDataSource =
-        GameRepository()
+    private val gamePresenter: RpsGameContract.Presenter =
+            RpsGamePresenter(this)
 
     /**
      * Atomic counter used to get unique user-names based on the maxiumum users the server had.
@@ -34,47 +33,23 @@ class ChatServer {
     /**
      * A concurrent map associating session IDs to user names.
      */
-    val memberNames = ConcurrentHashMap<String, String>()
+    private val memberNames = ConcurrentHashMap<String, String>()
+
+
+    private val playersSessions = ConcurrentHashMap<String, Player>()
 
     /**
      * Associates a session-id to a set of websockets.
      * Since a browser is able to open several tabs and windows with the same cookies and thus the same session.
      * There might be several opened sockets for the same client.
      */
-    val members = ConcurrentHashMap<String, MutableList<WebSocketSession>>()
+    private val members = ConcurrentHashMap<String, MutableList<WebSocketSession>>()
 
     /**
      * A list of the lastest messages sent to the server, so new members can have a bit context of what
      * other people was talking about before joining.
      */
-    val lastMessages = LinkedList<String>()
-
-
-    init {
-        game.setListener(object : GameDataSource.Listener {
-
-            override fun onGameStateChanged(gameState: GameState) {
-                when(gameState){
-                    GameState.NewGame -> {
-
-                    }
-                    is GameState.Ended -> {
-                        if (gameState.isWon) {
-                            GlobalScope.launch {
-                                val json2 = ClientEvent.GameEnded(game.getActivePlayer().id).toJson()
-                                broadcast(json2)
-                            }
-                        }
-                    }
-                    GameState.Running -> {
-
-                    }
-                }
-            }
-
-        })
-    }
-
+    private val lastMessages = LinkedList<String>()
 
     /**
      * Handles that a member identified with a session id and a socket joined.
@@ -95,10 +70,6 @@ class ChatServer {
         if (socketList.size == 1) {
             val playerId = members.keys.indexOf(memberId)
 
-            val json = ClientEvent.GameJoined(Player(playerId, game.getSymbol(playerId))).toJson()
-            //  sendTo(memberId,json)
-            val json2 = ClientEvent.GameEnded(playerId).toJson()
-            //  sendTo(memberId,json2)
             println("Member joined: $name.")
             broadcast("server", "Member joined: $name.")
         }
@@ -163,7 +134,7 @@ class ChatServer {
         members[recipient]?.send(Frame.Text(message))
     }
 
-    suspend fun sendError(recipient: String, sender: String, message: String) {
+    suspend fun sendMessage(recipient: String, message: String) {
         members[recipient]?.send(Frame.Text("$message"))
     }
 
@@ -225,62 +196,37 @@ class ChatServer {
     /**
      * We received a message. Let's process it.
      */
-    suspend fun receivedMessage(id: String, command: String) {
-        val playerId = members.keys.indexOf(id)
+    suspend fun receivedMessage(sessionId: String, command: String) {
+        val playerId = members.keys.indexOf(sessionId)
         val commandType = getServerCommandType(command)
 
         when (commandType) {
             ServerCommands.MAKETURN -> {
-
                 val cmd = ServerCommandParser.getMakeMove(command)
-
-                cmd.let {
-                    if (game.makeMove(playerId, cmd.coord)) {
-
-                        val cmdJson2 = ClientEvent.TurnEvent(
-                            CurrentTurn(Player(playerId, game.getSymbol(playerId)), cmd.coord),
-                            game.getActivePlayer().id
-                        ).toJson()
-                        broadcast(cmdJson2)
-                    } else {
-                        val cmdJson = ClientCommandParser.toJson(ClientEvent.ErrorEvent("CAN NOT MOVe"))
-
-                        sendError(id, "", cmdJson)
-                    }
-                }
+                gamePresenter.onMakeMove(playerId, cmd.coord)
             }
-            ServerCommands.MESSAGE -> TODO()
             ServerCommands.RESET -> {
+                gamePresenter.onReset()
                 members.clear()
-                game.reset()
-                val json2 = ClientEvent.NewGame().toJson()
-                broadcast(json2)
             }
-            ServerCommands.UNKNOWN -> TODO()
-            ServerCommands.ERROR -> TODO()
-            ServerCommands.GENERAL -> {
-                val cmd = ServerCommandParser.getGeneralCommand(command)
-                when (cmd.cmdID) {
-                    ServerCommands.RESET.ordinal -> {
 
-                    }
-                }
-
-            }
-            ServerCommands.EVENT -> TODO()
             ServerCommands.JOINGAME -> {
-                game.playerJoined()
-                val json = ClientEvent.GameJoined(Player(playerId, game.getSymbol(playerId))).toJson()
-                sendTo(id, json)
-
+                if (!playersSessions.containsKey(sessionId)) {
+                    gamePresenter.onAddPlayer(sessionId)
+                }
             }
-            null -> TODO()
+            ServerCommands.UNKNOWN,
+            ServerCommands.ERROR,
+            ServerCommands.MESSAGE,
+            null
+            -> {
+            }
         }
         // game.makeMove(playerId,)
         // We are going to handle commands (text starting with '/') and normal messages
         when {
             // The command `who` responds the user about all the member names connected to the user.
-            command.startsWith("/who") -> who(id)
+            command.startsWith("/who") -> who(sessionId)
             // The command `user` allows the user to set its name.
             command.startsWith("/user") -> {
                 // We strip the command part to get the rest of the parameters.
@@ -288,28 +234,47 @@ class ChatServer {
                 val newName = command.removePrefix("/user").trim()
                 // We verify that it is a valid name (in terms of length) to prevent abusing
                 when {
-                    newName.isEmpty() -> sendTo(id, "server::help", "/user [newName]")
+                    newName.isEmpty() -> sendTo(sessionId, "server::help", "/user [newName]")
                     newName.length > 50 -> sendTo(
-                        id,
-                        "server::help",
-                        "new name is too long: 50 characters limit"
+                            sessionId,
+                            "server::help",
+                            "new name is too long: 50 characters limit"
                     )
-                    else -> memberRenamed(id, newName)
+                    else -> memberRenamed(sessionId, newName)
                 }
             }
             // The command 'help' allows users to get a list of available commands.
-            command.startsWith("/help") -> help(id)
+            command.startsWith("/help") -> help(sessionId)
             // If no commands matched at this point, we notify about it.
             command.startsWith("/") -> sendTo(
-                id,
-                "server::help",
-                "Unknown command ${command.takeWhile { !it.isWhitespace() }}"
+                    sessionId,
+                    "server::help",
+                    "Unknown command ${command.takeWhile { !it.isWhitespace() }}"
             )
             // Handle a normal message.
             else -> {
                 //message(id, command)
             }
         }
+    }
+
+    override fun sendBroadcast(data: String) {
+        GlobalScope.launch {
+            broadcast(data)
+        }
+    }
+
+    override fun sendData(playerId: Int, data: String) {
+        val sessionId = playersSessions.filter { it.value.id == playerId }.keys.first()
+
+        GlobalScope.launch {
+            sendMessage(sessionId,data)
+        }
+    }
+
+    override fun onPlayerAdded(sessionId:String,player: Player) {
+        playersSessions[sessionId] = player
+
     }
 
 

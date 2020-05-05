@@ -1,6 +1,7 @@
 package ges.example.kotlinserver
 
 import com.squareup.moshi.Moshi
+import de.jensklingenberg.sheasy.model.ClientCommandParser
 import de.jensklingenberg.sheasy.model.Coord
 import de.jensklingenberg.sheasy.model.ServerCommand
 
@@ -57,5 +58,9 @@ fun main() {
         return checkRow(gameArray2) || checkCol(gameArray2)
     }
 
+    val json = "{\"id\":8,\"state\":{\"type\":\"de.jensklingenberg.sheasy.model.GameState.Lobby\"}}"
+
+
+    val stat = ClientCommandParser.getGameStateChangedCommand(json)
     println("Game is Won:"+checkWinner(gameArray))
 }

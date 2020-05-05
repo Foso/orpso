@@ -2,15 +2,12 @@ package tictactoe.ui.home
 
 import challenge.usecase.MessageUseCase
 import de.jensklingenberg.sheasy.model.Coord
-import kotlinx.html.DIV
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.style
 import react.RBuilder
 import react.RComponent
 import react.RProps
-import react.dom.RDOMBuilder
-import react.dom.button
-import react.dom.div
+import react.dom.*
 import react.setState
 
 class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.View {
@@ -22,19 +19,22 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
 
     override fun HomeContract.HomeViewState.init() {
-        map = Array<Array<String>>(3) { Array(3) { "-" } }
+        map = Array(3) { Array(3) { "-" } }
+        newMap = Array(3) { Array(3) { "-" } }
+
         showSnackbar = false
+        gameStateText = "Hallo"
 
     }
 
     override fun componentDidMount() {
         presenter.onCreate()
-
     }
 
     override fun RBuilder.render() {
 
         messageUseCase.showErrorSnackbar(this, state.errorMessage, snackbarVisibility())
+
 
         div("imagesGrid") {
             attrs {
@@ -71,108 +71,74 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
                 }
             }
 
-            firstRow()
+            div("container") {
+                div("content") {
+                    table("mytable2") {
+                        tbody {
+                            state.map.forEachIndexed { index, columns ->
+                                tr {
+                                    columns.forEachIndexed { index2, _ ->
+                                        td {
+                                            img {
+                                                attrs {
+                                                    height = "50"
+                                                    width = "50"
+                                                    if (state.map[index][index2] != "-") {
+                                                        src = when (state.map[index][index2]) {
+                                                            "0" -> "images/ximg.png"
+                                                            "1" -> "images/oimg.png"
+                                                            else -> ""
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
-            secondRow()
-            thirdRow()
+                div("overlay") {
+                    table("mytable") {
 
+                        tbody {
+                            state.map.forEachIndexed { index, columns ->
+                                tr {
+                                    columns.forEachIndexed { index2, _ ->
+                                        td {
+                                            img {
+                                                attrs {
+                                                    height = "50"
+                                                    width = "50"
+                                                    onClickFunction = {
+                                                        presenter.onCellClicked(Coord(index, index2))
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            p {
+                +state.gameStateText
+            }
 
         }
-
-
     }
+
 
     private fun snackbarVisibility(): Boolean {
         return state.showSnackbar
 
     }
 
-    private fun RDOMBuilder<DIV>.firstRow() {
-        div {
-            button {
-                attrs {
-                    text(state.map[0][0])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(0, 0))
-                    }
-                }
-            }
-            button {
-                attrs {
-                    text(state.map[0][1])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(0, 1))
-                    }
-                }
-            }
-            button {
-                attrs {
-                    text(state.map[0][2])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(0, 2))
-                    }
-                }
-            }
-        }
-    }
-
-    private fun RDOMBuilder<DIV>.secondRow() {
-        div {
-            button {
-                attrs {
-                    text(state.map[1][0])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(1, 0))
-                    }
-                }
-            }
-            button {
-                attrs {
-                    text(state.map[1][1])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(1, 1))
-                    }
-                }
-            }
-            button {
-                attrs {
-                    text(state.map[1][2])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(1, 2))
-                    }
-                }
-            }
-        }
-    }
-
-    private fun RDOMBuilder<DIV>.thirdRow() {
-        div {
-            button {
-                attrs {
-                    text(state.map[2][0])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(2, 0))
-                    }
-                }
-            }
-            button {
-                attrs {
-                    text(state.map[2][1])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(2, 1))
-                    }
-                }
-            }
-            button {
-                attrs {
-                    text(state.map[2][2])
-                    onClickFunction = {
-                        presenter.onCellClicked(Coord(2, 2))
-                    }
-                }
-            }
-        }
-    }
 
     override fun setCellData(coord: Coord, playerValue: String) {
         setState {
@@ -197,6 +163,13 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
     override fun setPlayerId(id: Int) {
         setState {
             this.playerId = id
+        }
+    }
+
+
+    override fun setgameStateText(text: String) {
+        setState {
+            this.gameStateText = text
         }
     }
 

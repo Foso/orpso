@@ -1,74 +1,65 @@
 package tictactoe.game
 
-import de.jensklingenberg.sheasy.model.ClientCommandParser
-import de.jensklingenberg.sheasy.model.ClientCommands
-import de.jensklingenberg.sheasy.model.getClientCommandType
+import de.jensklingenberg.sheasy.model.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 import org.w3c.dom.MessageEvent
 import org.w3c.dom.WebSocket
 import org.w3c.dom.events.Event
 
 class GameApiHandler {
-    var socket: WebSocket? = null
+
+    private var socket: WebSocket? = null
 
     private lateinit var observer: NetworkApiObserver
 
     fun start(observer: NetworkApiObserver) {
         this.observer = observer
-
-        socket = org.w3c.dom.WebSocket("wss://hidden-plateau-72953.herokuapp.com/tictactoe")
+        socket = org.w3c.dom.WebSocket(NetworkPreferences().hostname + "tictactoe")
 
         socket?.onmessage = { event: Event ->
             onMessage((event as MessageEvent))
         }
     }
 
+    fun getGameJoinedCommand(jsonStr: String): ClientEvent {
+        val json = Json(JsonConfiguration.Stable)
+
+        return json.parse(ClientEvent.serializer(), jsonStr)
+    }
+
+
     private fun onMessage(messageEvent: MessageEvent) {
+
         val type = getClientCommandType(messageEvent.data.toString())
-        console.log(type.toString()+" onMessage                " + messageEvent.data.toString())
+        console.log("TYPE:" + type.toString() + " onMessage                " + messageEvent.data.toString())
 
         val json = messageEvent.data.toString()
 
         when (type) {
-            ClientCommands.NEW_GAME -> {
-                observer.onNewGame()
-            }
             ClientCommands.JOINED -> {
-                val gameJoined =
-                    ClientCommandParser.getGameJoinedCommand(
-                        json
-                    )
+                val gameJoined = ClientCommandParser.getGameJoinedCommand(json)
                 observer.onGameJoined(gameJoined)
             }
 
             ClientCommands.TURN -> {
-                console.log("TURN: "+json)
-                val resource =
-                    ClientCommandParser.getTurnCommand(
-                        json
-                    )
+                val resource = ClientCommandParser.getTurnCommand(json)
                 observer.onTurn(resource)
             }
 
-            ClientCommands.GAME_ENDED -> {
-                val gameEnded =
-                    ClientCommandParser.getGameEndedCommand(
-                        json
-                    )
-                observer.onGameEnded(gameEnded)
+            ClientCommands.STATE_CHANGED -> {
+                val gameState = ClientCommandParser.getGameStateChangedCommand(json).state
+                observer.onGameStateChanged(gameState)
             }
 
             ClientCommands.ERROR -> {
-
-            }
-
-            ClientCommands.UNKNOWN -> {
-
+                val gameJoined = ClientCommandParser.getErrorCommand(json)
+                observer.onError(gameJoined)
             }
 
             null -> {
 
             }
-
         }
 
 

@@ -1,6 +1,0 @@
-package network
-
-interface SheasyWebSocketApi{
-
-
-}

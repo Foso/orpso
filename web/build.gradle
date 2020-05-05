@@ -61,6 +61,7 @@ dependencies {
 
     implementation(npm('@material-ui/core', libs.material_ui_core))
     implementation(npm('core-js', ''))
+    implementation(npm("@material-ui/icons"))
     implementation(npm('inline-style-prefixer', ''))
     implementation(npm('styled-components', ''))
     implementation(npm('uglifyjs-webpack-plugin', ''))

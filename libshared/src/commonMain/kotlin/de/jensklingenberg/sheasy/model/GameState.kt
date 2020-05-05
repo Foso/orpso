@@ -1,7 +1,16 @@
 package de.jensklingenberg.sheasy.model
 
-sealed class GameState() {
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed class GameState {
+    @Serializable
     object NewGame : GameState()
-    class Ended(val isWon: Boolean) : GameState()
-    object Running : GameState()
+    @Serializable
+    object Lobby : GameState()
+    @Serializable
+    object Started : GameState()
+    @Serializable
+    class Ended(val isWon: Boolean,val winnerID: Int) : GameState()
+
 }
