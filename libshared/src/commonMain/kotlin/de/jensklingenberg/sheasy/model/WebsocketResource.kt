@@ -18,7 +18,9 @@ fun ServerCommand.JoinGameCommand.toJson(): String {
     return Json(JsonConfiguration.Stable).stringify(ServerCommand.JoinGameCommand.serializer(), this)
 }
 
-
+fun ServerCommand.MoveCharCommand.toJson(): String {
+    return Json(JsonConfiguration.Stable).stringify(ServerCommand.MoveCharCommand.serializer(), this)
+}
 
 
 fun getServerCommandType(toString: String): ServerCommands? {

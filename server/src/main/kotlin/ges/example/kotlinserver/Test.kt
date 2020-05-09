@@ -1,14 +1,10 @@
 package ges.example.kotlinserver
 
-import com.squareup.moshi.Moshi
-import de.jensklingenberg.sheasy.model.ClientCommandParser
 import de.jensklingenberg.sheasy.model.Coord
-import de.jensklingenberg.sheasy.model.ServerCommand
+import de.jensklingenberg.sheasy.model.Player
+import de.jensklingenberg.sheasy.model.Warrior
+import de.jensklingenberg.sheasy.model.Weapon
 
-open class Weapon
-class Schere : Weapon()
-class Papier: Weapon()
-class Stein: Weapon()
 
 /**
  * Schere schlägt Papier
@@ -17,19 +13,61 @@ class Stein: Weapon()
  */
 
 
-fun check(weapon1: Weapon,weapon2: Weapon){
+fun moveChar(from: Coord, toCoord: Coord, elementList: MutableList<Warrior>) {
+    val fromChar = elementList.find { it.coord == from }
+
+    val toChar = elementList.find { it.coord == toCoord }
+
+    if (fromChar == null) {
+        return
+    } else {
+        if (toChar == null) {
+            elementList.remove(fromChar)
+            elementList.add(fromChar.copy(coord = toCoord))
+        }
+    }
+
 
 }
 
+val ROWS = 6
+val COLS = 7
 fun main() {
+    val elementList = mutableListOf<Warrior>()
 
-    val gameArray = Array<Array<Int>>(3) { Array(3) { -1 } }
+    elementList.add(Warrior(Player(0, "X", ""), Weapon.Schere(), Coord(0, 0)))
 
-    gameArray[0][0] = 1
-    gameArray[1][0] = 1
-    gameArray[2][0] = 1
+    printMap(elementList)
+    moveChar(Coord(0, 0), Coord(0, 1), elementList)
+    printMap(elementList)
+    moveChar(Coord(0, 1), Coord(0, 2), elementList)
+    printMap(elementList)
+
+}
+
+private fun printMap(elementList: MutableList<Warrior>) {
+    val gameArray = Array(ROWS) { Array(COLS) { "" } }
+
+    elementList.forEach {
+        val coord = it.coord
+        gameArray[coord.y][coord.x] = "W"
+    }
+
+    gameArray.forEachIndexed { index, strings ->
 
 
+        println(strings.joinToString(separator = "|") {
+            val value = if (it == "") {
+                "-"
+            } else {
+                it
+            }
+            value
+        })
+
+
+    }
+    println("__________________________________________________________")
 
 
 }

@@ -11,6 +11,8 @@ class GameRepository : GameDataSource, NetworkApiObserver {
     private val gameTable = Array<Array<String>>(3) { Array(3) { "-" } }
     private val gameSubject: BehaviorSubject<Array<Array<String>>> = BehaviorSubject(gameTable)
     private var activePlayerId: Int? = null
+    private val warriorSubject: BehaviorSubject<List<Warrior>> = BehaviorSubject(emptyList())
+
     private val gameStateSubject: BehaviorSubject<GameState> = BehaviorSubject(GameState.NewGame)
     private val playerSubject: BehaviorSubject<Int> = BehaviorSubject(-1)
     private val gameApiHandler = GameApiHandler()
@@ -24,23 +26,34 @@ class GameRepository : GameDataSource, NetworkApiObserver {
 
     override fun observePlayer(): Observable<Int> = playerSubject
 
+    override fun observeMap(): Observable<List<Warrior>> = warriorSubject
+    override fun onMoveChar( fromCoord: Coord, toCoord: Coord) {
+        console.log("onMoveChar============================0")
+        val json = ServerCommand.MoveCharCommand(fromCoord, toCoord).toJson()
+        gameApiHandler.sendMessage(json)
+    }
+
+
     override fun join() {
         val jsonData = ServerCommand.JoinGameCommand().toJson()
         gameApiHandler.sendMessage(jsonData)
     }
 
-    override fun makeAMove(coord: Coord): Completable {
-        return completable {
+    override fun makeAMove(coord: Coord) {
             val makeMoveCommand = ServerCommand.MakeTurnCommand(coord)
             val jsonData = ServerCommandParser.toJson(makeMoveCommand)
             gameApiHandler.sendMessage(jsonData)
-            it.onComplete()
-        }
     }
 
     override fun requestReset() {
         val jsonData = ServerCommand.ResetCommand().toJson()
-        gameApiHandler.sendMessage(jsonData)
+        val json = ServerCommand.MoveCharCommand(Coord(0,0), Coord(0,1)).toJson()
+        gameApiHandler.sendMessage(json)
+      //  reset()
+    }
+
+    override fun onGameUpdated(warrios: List<Warrior>) {
+        warriorSubject.onNext(warrios)
     }
 
     override fun onGameJoined(gamejoinCmd: ClientEvent.GameJoined) {

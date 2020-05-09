@@ -4,9 +4,26 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 
+@Serializable
+data class Warrior(val owner: Player, val weapon: Weapon, val coord: Coord, val weaponRevealed: Boolean = false)
 
+@Serializable
+sealed class Weapon{
+    @Serializable
+    class Schere : Weapon()
+    @Serializable
+    class Papier: Weapon()
+    @Serializable
+    class Stein: Weapon()
+    @Serializable
+    class Trap: Weapon()
+    @Serializable
+    class Flag:Weapon()
+    @Serializable
+    class Hidden:Weapon()
+}
 enum class ClientCommands {
-    JOINED,  ERROR,  TURN, STATE_CHANGED, MESSAGE
+    JOINED,  ERROR,  TURN, STATE_CHANGED, MESSAGE,UPDATE
 }
 
 @Serializable
@@ -26,6 +43,9 @@ sealed class ClientEvent(val id: Int) {
 
     @Serializable
     class TurnEvent(val turn: CurrentTurn, val nextPlayerId: Int) : ClientEvent(ClientCommands.TURN.ordinal)
+
+    @Serializable
+    class GameUpdate(val warrior: List<Warrior>) : ClientEvent(ClientCommands.UPDATE.ordinal)
 }
 
 fun ClientEvent.TurnEvent.toJson(): String {
@@ -40,6 +60,10 @@ fun ClientEvent.GameStateChanged.toJson(): String {
     return Json(JsonConfiguration.Stable).stringify(ClientEvent.GameStateChanged.serializer(), this)
 }
 
+fun ClientEvent.GameUpdate.toJson(): String {
+    return Json(JsonConfiguration.Stable).stringify(ClientEvent.GameUpdate.serializer(), this)
+}
+
 class ClientCommandParser {
     companion object {
         private val json = Json(JsonConfiguration.Stable)
@@ -49,6 +73,10 @@ class ClientCommandParser {
 
         fun getTurnCommand(jsonStr: String): ClientEvent.TurnEvent {
             return json.parse(ClientEvent.TurnEvent.serializer(), jsonStr)
+        }
+
+        fun getUpdateCommand(jsonStr: String): ClientEvent.GameUpdate {
+            return json.parse(ClientEvent.GameUpdate.serializer(), jsonStr)
         }
 
         fun getGameStateChangedCommand(jsonStr: String): ClientEvent.GameStateChanged {

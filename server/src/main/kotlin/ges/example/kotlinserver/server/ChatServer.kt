@@ -201,6 +201,10 @@ class ChatServer : RpsGameContract.RpsGameServer {
         val commandType = getServerCommandType(command)
 
         when (commandType) {
+            ServerCommands.MOVECHAR -> {
+                val cmd = ServerCommandParser.getMoveChar(command)
+                gamePresenter.onMoveChar(playerId, cmd.fromCoord,cmd.toCoord)
+            }
             ServerCommands.MAKETURN -> {
                 val cmd = ServerCommandParser.getMakeMove(command)
                 gamePresenter.onMakeMove(playerId, cmd.coord)

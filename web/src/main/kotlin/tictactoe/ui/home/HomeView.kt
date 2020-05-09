@@ -2,6 +2,7 @@ package tictactoe.ui.home
 
 import challenge.usecase.MessageUseCase
 import de.jensklingenberg.sheasy.model.Coord
+import de.jensklingenberg.sheasy.model.Warrior
 import kotlinx.html.DIV
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.style
@@ -20,17 +21,18 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
 
     override fun HomeContract.HomeViewState.init() {
-        map = Array(3) { Array(3) { "-" } }
-        newMap = Array(3) { Array(3) { "-" } }
-
+        elementList = emptyList()
+        gameArray = Array(6) { Array(7) { "" } }
+        overlayArray = Array(6) { Array(7) { "" } }
         showSnackbar = false
         gameStateText = "Hallo"
-
+        overlayList = emptyList()
     }
 
     override fun componentDidMount() {
         presenter.onCreate()
     }
+
 
     override fun RBuilder.render() {
 
@@ -90,22 +92,39 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
             table("mytable") {
 
                 tbody {
-                    state.map.forEachIndexed { index, columns ->
+                    (0..GameSettings.ROWS-1).forEach {rowIndex->
+
                         tr {
-                            columns.forEachIndexed { index2, _ ->
-                                td {
-                                    img {
-                                        attrs {
-                                            height = "50"
-                                            width = "50"
-                                            onClickFunction = {
-                                                presenter.onCellClicked(Coord(index, index2))
+
+                            (0..GameSettings.COLS-1).forEach {colIndex->
+                                        td {
+                                            img {
+                                                attrs {
+                                                    height = "50"
+                                                    width = "50"
+                                                    onClickFunction = {
+                                                        presenter.onCellClicked(Coord(rowIndex, colIndex))
+                                                    }
+
+
+                                                    src = if (state.overlayList.find { it == Coord(rowIndex, colIndex) }!=null) {
+
+                                                        "images/Letter_o.svg"
+                                                    }else{
+                                                        ""
+                                                    }
+                                                }
                                             }
                                         }
-                                    }
+
                                 }
                             }
-                        }
+
+
+
+
+
+
                     }
                 }
             }
@@ -116,7 +135,7 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
         div("gameDiv") {
             table("mytable2") {
                 tbody {
-                    state.map.forEachIndexed { index, columns ->
+                    state.gameArray.forEachIndexed { index, columns ->
                         tr {
                             columns.forEachIndexed { index2, _ ->
                                 td {
@@ -124,12 +143,11 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
                                         attrs {
                                             height = "50"
                                             width = "50"
-                                            if (state.map[index][index2] != "-") {
-                                                src = when (state.map[index][index2]) {
-                                                    "0" -> "images/ximg.png"
-                                                    "1" -> "images/oimg.png"
-                                                    else -> ""
-                                                }
+                                            if (state.elementList.find { it.coord == Coord(index, index2) }!=null) {
+
+                                                src = "images/player.png"
+                                            }else{
+                                                src = ""
                                             }
                                         }
                                     }
@@ -148,10 +166,9 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
     }
 
-
     override fun setCellData(coord: Coord, playerValue: String) {
         setState {
-            this.map[coord.y][coord.x] = playerValue
+            this.gameArray[coord.y][coord.x] = playerValue
         }
 
     }
@@ -165,7 +182,8 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
     override fun setGameData(map: Array<Array<String>>) {
         setState {
-            this.map = map
+            // this.gameArray = map
+            this.overlayArray = Array(6) { Array(7) { "" } }
         }
     }
 
@@ -175,7 +193,6 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
         }
     }
 
-
     override fun setgameStateText(text: String) {
         setState {
             this.gameStateText = text
@@ -183,6 +200,17 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
     }
 
 
+    override fun setElement(warriors: List<Warrior>) {
+        setState {
+            this.elementList=warriors
+        }
+    }
+
+    override fun setOverlayList(overlays: List<Coord>) {
+        setState {
+            this.overlayList=overlays
+        }
+    }
 }
 
 

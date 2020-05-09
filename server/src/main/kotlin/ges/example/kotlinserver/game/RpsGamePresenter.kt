@@ -4,20 +4,6 @@ package ges.example.kotlinserver.game
 import de.jensklingenberg.sheasy.model.*
 
 
-interface RpsGameContract {
-    interface RpsGameServer {
-        fun sendBroadcast(data: String)
-        fun sendData(playerId: Int, data: String)
-        fun onPlayerAdded(sessionId: String, player: Player)
-    }
-
-    interface Presenter {
-        fun onMakeMove(playerId: Int, coord: Coord)
-        fun onReset()
-        fun onAddPlayer(sessionId: String)
-    }
-}
-
 class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsGameContract.Presenter {
 
     private val MAX_PLAYERS = 1
@@ -25,7 +11,12 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
     var gameState: GameState = GameState.Lobby
     var activePlayerId = 0
     private val gameArray = Array<Array<Int>>(3) { Array(3) { -1 } }
+    val elementList = mutableListOf<Warrior>()
 
+
+    init {
+        elementList.add(Warrior(Player(0, "X", ""), Weapon.Schere(), Coord(0, 0)))
+    }
     private fun checkRow(gameArray2: Array<Array<Int>>): Boolean {
         return (0..2).any { id ->
             gameArray2[id][0] != -1 &&
@@ -134,6 +125,24 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
         }
     }
 
+    override fun onMoveChar(playerId: Int, fromCoord: Coord, toCoord: Coord) {
+        val fromChar = elementList.find { it.coord == fromCoord }
+
+        val toChar = elementList.find { it.coord == toCoord }
+
+        if (fromChar == null) {
+            return
+        } else {
+            if (toChar == null) {
+                elementList.remove(fromChar)
+                elementList.add(fromChar.copy(coord = toCoord))
+            }
+        }
+        val json2 = ClientEvent.GameUpdate(elementList).toJson()
+        server.sendBroadcast(json2)
+
+    }
+
     private fun sendGameStateChanged(gameState: GameState) {
         val json2 = ClientEvent.GameStateChanged(gameState).toJson()
         server.sendBroadcast(json2)
@@ -152,4 +161,5 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
             }
         }
     }
+
 }

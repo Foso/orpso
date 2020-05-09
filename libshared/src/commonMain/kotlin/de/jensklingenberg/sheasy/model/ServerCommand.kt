@@ -12,7 +12,8 @@ enum class ServerCommands {
     ERROR,
     UNKNOWN,
     RESET,
-    JOINGAME
+    JOINGAME,
+    MOVECHAR
 }
 
 
@@ -27,6 +28,10 @@ sealed class ServerCommand(val id: Int) {
         ServerCommands.MAKETURN.ordinal)
 
     @Serializable
+    class MoveCharCommand(val fromCoord: Coord,val toCoord: Coord) : ServerCommand(
+        ServerCommands.MOVECHAR.ordinal)
+
+    @Serializable
     class ResetCommand : ServerCommand(ServerCommands.RESET.ordinal)
 
     @Serializable
@@ -39,6 +44,12 @@ class ServerCommandParser {
         fun getMakeMove(jsonStr: String): ServerCommand.MakeTurnCommand {
             val json = Json(JsonConfiguration.Stable)
             return json.parse(ServerCommand.MakeTurnCommand.serializer(), jsonStr)
+
+        }
+
+        fun getMoveChar(jsonStr: String): ServerCommand.MoveCharCommand {
+            val json = Json(JsonConfiguration.Stable)
+            return json.parse(ServerCommand.MoveCharCommand.serializer(), jsonStr)
 
         }
 

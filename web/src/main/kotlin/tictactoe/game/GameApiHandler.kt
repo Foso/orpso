@@ -22,12 +22,6 @@ class GameApiHandler {
         }
     }
 
-    fun getGameJoinedCommand(jsonStr: String): ClientEvent {
-        val json = Json(JsonConfiguration.Stable)
-
-        return json.parse(ClientEvent.serializer(), jsonStr)
-    }
-
 
     private fun onMessage(messageEvent: MessageEvent) {
 
@@ -37,6 +31,11 @@ class GameApiHandler {
         val json = messageEvent.data.toString()
 
         when (type) {
+            ClientCommands.UPDATE->{
+                val gameJoined = ClientCommandParser.getUpdateCommand(json)
+                observer.onGameUpdated(gameJoined.warrior)
+            }
+
             ClientCommands.JOINED -> {
                 val gameJoined = ClientCommandParser.getGameJoinedCommand(json)
                 observer.onGameJoined(gameJoined)
