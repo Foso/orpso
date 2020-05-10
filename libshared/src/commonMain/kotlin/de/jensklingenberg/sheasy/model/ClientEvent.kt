@@ -7,23 +7,145 @@ import kotlinx.serialization.json.JsonConfiguration
 @Serializable
 data class Warrior(val owner: Player, val weapon: Weapon, val coord: Coord, val weaponRevealed: Boolean = false)
 
+fun getWeaponImagePath(id: Int, weapon: Weapon): String {
+
+    fun schere(id: Int): String = when (id) {
+        0 -> "images/scissors_blue.svg"
+        1 -> "images/scissors_red.svg"
+        else -> ""
+    }
+
+    fun rock(id: Int): String = when (id) {
+        0 -> "images/rock_blue.svg"
+        1 -> "images/rock_red.svg"
+        else -> ""
+
+    }
+
+    fun hidden(id: Int): String {
+        return when (id) {
+            0 -> "images/player_blue.svg"
+            1 -> "images/player_red.svg"
+            else -> ""
+        }
+    }
+
+    fun paper(id: Int): String {
+        return when (id) {
+            0 -> "images/paper_blue.svg"
+            1 -> "images/paper_red.svg"
+            else -> ""
+        }
+    }
+
+    fun flag(id: Int): String {
+        return when (id) {
+            0 -> "images/flag_blue.svg"
+            1 -> "images/flag_red.svg"
+            else -> ""
+        }
+    }
+
+    fun trap(id: Int): String {
+        return when (id) {
+            0 -> "images/trap_blue.svg"
+            1 -> "images/trap_red.svg"
+            else -> ""
+        }
+    }
+
+    return when (weapon) {
+        is Weapon.Schere -> schere(id)
+        is Weapon.Papier -> paper(id)
+        is Weapon.Rock -> rock(id)
+        is Weapon.Trap -> trap(id)
+        is Weapon.Flag -> flag(id)
+        is Weapon.Hidden -> hidden(id)
+    }
+}
+
+enum class MatchState{
+    WIN,LOOSE,DRAW
+}
+
+fun checkWinner(attackWeapon:Weapon,defenseWeapon:Weapon): MatchState {
+
+       return when(defenseWeapon){
+            is Weapon.Schere -> {
+                when (attackWeapon) {
+                    is Weapon.Rock -> {
+                        MatchState.WIN
+                    }
+                    is Weapon.Schere -> {
+                        MatchState.DRAW
+                    }
+                    else -> {
+                        MatchState.LOOSE
+                    }
+                }
+            }
+            is Weapon.Papier -> {
+                when (attackWeapon) {
+                    is Weapon.Schere -> {
+                        MatchState.WIN
+                    }
+                    is Weapon.Papier -> {
+                        MatchState.DRAW
+                    }
+                    else -> {
+                        MatchState.LOOSE
+                    }
+                }
+
+            }
+            is Weapon.Rock -> {
+                when (attackWeapon) {
+                    is Weapon.Papier -> {
+                        MatchState.WIN
+                    }
+                    is Weapon.Rock -> {
+                        MatchState.DRAW
+                    }
+                    else -> {
+                        MatchState.LOOSE
+                    }
+                }
+            }
+            is Weapon.Trap -> {
+                MatchState.LOOSE
+            }
+            is Weapon.Flag -> {
+                MatchState.WIN
+            }
+            is Weapon.Hidden -> {
+                MatchState.WIN
+            }
+        }
+}
+
 @Serializable
-sealed class Weapon{
+sealed class Weapon() {
     @Serializable
     class Schere : Weapon()
+
     @Serializable
-    class Papier: Weapon()
+    class Papier : Weapon()
+
     @Serializable
-    class Stein: Weapon()
+    class Rock : Weapon()
+
     @Serializable
-    class Trap: Weapon()
+    class Trap : Weapon()
+
     @Serializable
-    class Flag:Weapon()
+    class Flag : Weapon()
+
     @Serializable
-    class Hidden:Weapon()
+    class Hidden : Weapon()
 }
+
 enum class ClientCommands {
-    JOINED,  ERROR,  TURN, STATE_CHANGED, MESSAGE,UPDATE
+    JOINED, ERROR, TURN, STATE_CHANGED, MESSAGE, UPDATE
 }
 
 @Serializable

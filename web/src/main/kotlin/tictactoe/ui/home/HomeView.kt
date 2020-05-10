@@ -21,7 +21,7 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
 
     override fun HomeContract.HomeViewState.init() {
-        elementList = emptyList()
+        imageList = emptyList()
         gameArray = Array(6) { Array(7) { "" } }
         overlayArray = Array(6) { Array(7) { "" } }
         showSnackbar = false
@@ -92,37 +92,40 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
             table("mytable") {
 
                 tbody {
-                    (0..GameSettings.ROWS-1).forEach {rowIndex->
+                    (0 until GameSettings.ROWS).forEach { rowIndex ->
 
                         tr {
 
-                            (0..GameSettings.COLS-1).forEach {colIndex->
-                                        td {
-                                            img {
-                                                attrs {
-                                                    height = "50"
-                                                    width = "50"
-                                                    onClickFunction = {
-                                                        presenter.onCellClicked(Coord(rowIndex, colIndex))
-                                                    }
+                            (0 until GameSettings.COLS).forEach { colIndex ->
+                                td {
+                                    img {
+                                        attrs {
+                                            height = "50"
+                                            width = "50"
+                                            onClickFunction = {
+                                                presenter.onCellClicked(Coord(rowIndex, colIndex))
+                                            }
 
+                                            val overlayItem = state.overlayList.find {
+                                                it == Coord(
+                                                    rowIndex,
+                                                    colIndex
+                                                )
+                                            }
+                                            src = if (overlayItem
+                                                != null
+                                            ) {
 
-                                                    src = if (state.overlayList.find { it == Coord(rowIndex, colIndex) }!=null) {
-
-                                                        "images/Letter_o.svg"
-                                                    }else{
-                                                        ""
-                                                    }
-                                                }
+                                                "images/Letter_o.svg"
+                                            } else {
+                                                ""
                                             }
                                         }
-
+                                    }
                                 }
+
                             }
-
-
-
-
+                        }
 
 
                     }
@@ -135,20 +138,22 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
         div("gameDiv") {
             table("mytable2") {
                 tbody {
-                    state.gameArray.forEachIndexed { index, columns ->
+                    (0 until GameSettings.ROWS).forEach { rowIndex ->
                         tr {
-                            columns.forEachIndexed { index2, _ ->
+                            (0 until GameSettings.COLS).forEach { colIndex ->
                                 td {
                                     img {
                                         attrs {
                                             height = "50"
                                             width = "50"
-                                            if (state.elementList.find { it.coord == Coord(index, index2) }!=null) {
-
-                                                src = "images/player.png"
-                                            }else{
-                                                src = ""
+                                            val elementItem =state.imageList.find {
+                                                it.coord == Coord(
+                                                    rowIndex,
+                                                    colIndex
+                                                )
                                             }
+                                            src = elementItem?.imgPath?:""
+
                                         }
                                     }
                                 }
@@ -200,15 +205,15 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
     }
 
 
-    override fun setElement(warriors: List<Warrior>) {
+    override fun setElement(warriors: List<ElementImage>) {
         setState {
-            this.elementList=warriors
+            this.imageList = warriors
         }
     }
 
     override fun setOverlayList(overlays: List<Coord>) {
         setState {
-            this.overlayList=overlays
+            this.overlayList = overlays
         }
     }
 }

@@ -1,9 +1,6 @@
 package ges.example.kotlinserver
 
-import de.jensklingenberg.sheasy.model.Coord
-import de.jensklingenberg.sheasy.model.Player
-import de.jensklingenberg.sheasy.model.Warrior
-import de.jensklingenberg.sheasy.model.Weapon
+import de.jensklingenberg.sheasy.model.*
 
 
 /**
@@ -33,6 +30,9 @@ fun moveChar(from: Coord, toCoord: Coord, elementList: MutableList<Warrior>) {
 val ROWS = 6
 val COLS = 7
 fun main() {
+
+    val check = checkWinner(Weapon.Rock(),Weapon.Schere())
+
     val elementList = mutableListOf<Warrior>()
 
     elementList.add(Warrior(Player(0, "X", ""), Weapon.Schere(), Coord(0, 0)))

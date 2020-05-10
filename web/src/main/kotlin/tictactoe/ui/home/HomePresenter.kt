@@ -1,9 +1,7 @@
 package tictactoe.ui.home
 
 import com.badoo.reaktive.observable.subscribe
-import de.jensklingenberg.sheasy.model.Coord
-import de.jensklingenberg.sheasy.model.GameState
-import de.jensklingenberg.sheasy.model.Warrior
+import de.jensklingenberg.sheasy.model.*
 import tictactoe.game.GameDataSource
 import tictactoe.game.GameRepository
 import kotlin.browser.window
@@ -14,6 +12,8 @@ class GameSettings{
         val COLS = 7
     }
 }
+
+class ElementImage(val imgPath:String="",val coord: Coord)
 
 class HomePresenter(private val view: HomeContract.View) : HomeContract.Presenter {
     private val elementList = mutableListOf<Warrior>()
@@ -46,18 +46,15 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
             view.setGameData(it)
         })
 
-        gameDataSource.observeMap().subscribe(onNext = {
+        gameDataSource.observeMap().subscribe(onNext = { it ->
             if (it.isNotEmpty()) {
                 elementList.clear()
                 elementList.addAll(it)
-                it.forEach {
-                    console.log("HUHU:"+it.coord)
-                    val coord = it.coord
-
-                    //view.setCellData(coord, "images/player.png")
+                val imgList = elementList.map {
+                     ElementImage( getWeaponImagePath(it.owner.id,it.weapon),it.coord)
 
                 }
-                view.setElement(it)
+                view.setElement(imgList)
             }
         })
 
@@ -77,6 +74,7 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
         val selectedOverlay = overlayArrows.find { it == coord }
         if(selectedOverlay!=null){
             if(selectedWarrior!=null){
+                console.log("Move from: "+selectedWarrior?.coord+ " to "+coord)
                 gameDataSource.onMoveChar(selectedWarrior!!.coord,coord)
 
                 view.setOverlayList(overlayArrows)
@@ -84,36 +82,42 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
             }
         }else{
             overlayArrows.clear()
+            val selected = elementList.find { it.coord == coord }
+
+            if(selected?.weapon is Weapon.Trap ||
+                selected?.weapon is Weapon.Flag
+               // || selected?.weapon is Weapon.Hidden
+            ){
+                return
+            }
+
+            if (selected != null) {
+                selectedWarrior = selected
+
+                //Left
+                if(selectedWarrior?.coord?.x!=0){
+                    overlayArrows.add(coord.copy(x = coord.x - 1))
+                }
+
+                //Right
+                if(selectedWarrior?.coord?.x!=GameSettings.COLS){
+                    overlayArrows.add(coord.copy(x = coord.x + 1))
+                }
+
+                //Top
+                if(selectedWarrior?.coord?.y!=0){
+                    overlayArrows.add(coord.copy(coord.y-1))
+                }
+
+                //Bottom
+                if(selectedWarrior?.coord?.y!=GameSettings.ROWS){
+                    overlayArrows.add(coord.copy(coord.y+1))
+                }
+
+                view.setOverlayList(overlayArrows)
+            }
         }
-        val selected = elementList.find { it.coord == coord }
 
-
-
-        if (selected != null) {
-            selectedWarrior = selected
-
-            //Left
-            if(selectedWarrior?.coord?.x!=0){
-                overlayArrows.add(coord.copy(x = coord.x - 1))
-            }
-
-            //Right
-            if(selectedWarrior?.coord?.x!=GameSettings.COLS){
-                overlayArrows.add(coord.copy(x = coord.x + 1))
-            }
-
-            //Top
-            if(selectedWarrior?.coord?.y!=0){
-                overlayArrows.add(coord.copy(coord.y-1))
-            }
-
-            //Bottom
-            if(selectedWarrior?.coord?.y!=GameSettings.ROWS){
-                overlayArrows.add(coord.copy(coord.y+1))
-            }
-
-            view.setOverlayList(overlayArrows)
-        }
         //gameDataSource.makeAMove(coord)
     }
 

@@ -13,7 +13,7 @@ interface HomeContract {
         fun setGameData(map: Array<Array<String>>)
         fun setPlayerId(id: Int)
         fun setgameStateText(text:String)
-        fun setElement(warriors:List<Warrior>)
+        fun setElement(warriors:List<ElementImage>)
         fun setOverlayList(overlays:List<Coord>)
 
     }
@@ -27,7 +27,7 @@ interface HomeContract {
     }
 
     interface HomeViewState : RState {
-        var elementList : List<Warrior>
+        var imageList : List<ElementImage>
         var gameArray: Array<Array<String>>
         var errorMessage: String
         var status: Status
