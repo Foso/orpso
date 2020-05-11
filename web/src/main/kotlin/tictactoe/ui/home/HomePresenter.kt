@@ -4,6 +4,7 @@ import com.badoo.reaktive.observable.subscribe
 import de.jensklingenberg.sheasy.model.*
 import tictactoe.game.GameDataSource
 import tictactoe.game.GameRepository
+import tictactoe.model.ElementImage
 import kotlin.browser.window
 
 class GameSettings{
@@ -12,8 +13,6 @@ class GameSettings{
         val COLS = 7
     }
 }
-
-class ElementImage(val imgPath:String="",val coord: Coord)
 
 class HomePresenter(private val view: HomeContract.View) : HomeContract.Presenter {
     private val elementList = mutableListOf<Warrior>()
@@ -39,6 +38,14 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
                 is GameState.Lobby -> {
                     view.setgameStateText("WAITING FOR OPPONENTS")
                 }
+                is GameState.DrawEvent -> {
+                    window.alert("CHOOSE WEAPON")
+
+
+                }
+                is GameState.GameUpdate -> {
+
+                }
             }
         })
 
@@ -51,7 +58,10 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
                 elementList.clear()
                 elementList.addAll(it)
                 val imgList = elementList.map {
-                     ElementImage( getWeaponImagePath(it.owner.id,it.weapon),it.coord)
+                    ElementImage(
+                        getWeaponImagePath(it.owner.id, it.weapon),
+                        it.coord
+                    )
 
                 }
                 view.setElement(imgList)

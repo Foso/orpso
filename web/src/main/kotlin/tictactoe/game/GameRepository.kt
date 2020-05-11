@@ -52,15 +52,6 @@ class GameRepository : GameDataSource, NetworkApiObserver {
       //  reset()
     }
 
-    override fun onGameUpdated(warrios: List<Warrior>) {
-        warriorSubject.onNext(warrios)
-    }
-
-    override fun onGameJoined(gamejoinCmd: ClientEvent.GameJoined) {
-        activePlayerId = gamejoinCmd.yourPlayer.id
-        playerSubject.onNext(gamejoinCmd.yourPlayer.id)
-    }
-
     fun onNewGame() {
         reset()
     }
@@ -84,7 +75,21 @@ class GameRepository : GameDataSource, NetworkApiObserver {
     }
 
     override fun onGameStateChanged(gameState: GameState) {
+        when(gameState){
+            is GameState.GameUpdate -> {
+                warriorSubject.onNext(gameState.warrior)
+            }
+        }
         gameStateSubject.onNext(gameState)
+    }
+
+    override fun onPlayerEventChanged(gameState: PlayerEventState) {
+        when(gameState){
+            is PlayerEventState.JOINED -> {
+                activePlayerId = gameState.yourPlayer.id
+                playerSubject.onNext(gameState.yourPlayer.id)
+            }
+        }
     }
 
     override fun onError(gameJoined: ClientEvent.ErrorEvent) {

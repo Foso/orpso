@@ -31,14 +31,10 @@ class GameApiHandler {
         val json = messageEvent.data.toString()
 
         when (type) {
-            ClientCommands.UPDATE->{
-                val gameJoined = ClientCommandParser.getUpdateCommand(json)
-                observer.onGameUpdated(gameJoined.warrior)
-            }
 
             ClientCommands.JOINED -> {
-                val gameJoined = ClientCommandParser.getGameJoinedCommand(json)
-                observer.onGameJoined(gameJoined)
+
+
             }
 
             ClientCommands.TURN -> {
@@ -57,6 +53,14 @@ class GameApiHandler {
             }
 
             null -> {
+
+            }
+            ClientCommands.MESSAGE -> {
+
+            }
+            ClientCommands.PLAYER_EVENT -> {
+                val gameState = ClientCommandParser.getPlayerEvent(json).state
+                observer.onPlayerEventChanged(gameState)
 
             }
         }

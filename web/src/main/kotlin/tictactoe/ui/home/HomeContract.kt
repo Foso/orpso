@@ -1,10 +1,9 @@
 package tictactoe.ui.home
 
 import de.jensklingenberg.sheasy.model.Coord
-import de.jensklingenberg.sheasy.model.GameState
 import de.jensklingenberg.sheasy.model.Status
-import de.jensklingenberg.sheasy.model.Warrior
 import react.RState
+import tictactoe.model.ElementImage
 
 interface HomeContract {
     interface View {

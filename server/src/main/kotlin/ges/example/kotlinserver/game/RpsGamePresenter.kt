@@ -24,8 +24,8 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
     init {
         (0 until GameSettings.COLS).forEach {
             elementList.add(Warrior(Player(1, "X", ""), Weapon.Flag(), Coord(0, it)))
-            elementList.add(Warrior(Player(1, "X", ""), Weapon.Papier(), Coord(1, it)))
-            elementList.add(Warrior(Player(0, "X", ""), Weapon.Schere(), Coord(GameSettings.ROWS - 2, it)))
+            elementList.add(Warrior(Player(1, "X", ""), Weapon.Scissors(), Coord(1, it)))
+            elementList.add(Warrior(Player(0, "X", ""), Weapon.Scissors(), Coord(GameSettings.ROWS - 2, it)))
             elementList.add(Warrior(Player(0, "X", ""), Weapon.Trap(), Coord(GameSettings.ROWS - 1, it)))
         }
     }
@@ -90,8 +90,9 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
         val player = Player(newPlayerID, getSymbol(newPlayerID), "Player$newPlayerID")
         playerList.add(player)
         server.onPlayerAdded(sessionId, player)
-        val json = ClientEvent.GameJoined(player).toJson()
-        server.sendData(player.id, json)
+
+        val json2 = ClientEvent.PlayerEvent(PlayerEventState.JOINED(player)).toJson()
+        server.sendData(player.id, json2)
         sendGameStateChanged(GameState.Lobby)
         if (playerList.size == MAX_PLAYERS) {
             gameState = GameState.Started
@@ -137,6 +138,7 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
             if (toChar == null) {
                 elementList.remove(fromChar)
                 elementList.add(fromChar.copy(coord = toCoord))
+                sendGameMap()
             } else {
 
                 when (checkWinner(attackWeapon = fromChar.weapon, defenseWeapon = toChar.weapon)) {
@@ -148,27 +150,32 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
                         elementList.remove(fromChar)
                         elementList.remove(toChar)
                         elementList.add(fromChar.copy(coord = toCoord,weaponRevealed = true))
+                        sendGameMap()
+
                     }
                     MatchState.LOOSE -> {
                         elementList.remove(fromChar)
                         elementList.remove(toChar)
                         elementList.add(toChar.copy(weaponRevealed = true))
+                        sendGameMap()
+
                     }
                     MatchState.DRAW -> {
-
+                        val json2 = ClientEvent.GameStateChanged(GameState.DrawEvent).toJson()
+                        server.sendBroadcast(json2)
                     }
                 }
             }
         }
-        sendGameMap()
 
     }
 
     private fun sendGameMap() {
         playerList.forEach {
             val newEle = hideElements(it.id, elementList)
-            val json2 = ClientEvent.GameUpdate(newEle).toJson()
-            server.sendData(it.id, json2)
+
+            val json = ClientEvent.GameStateChanged(GameState.GameUpdate(newEle)).toJson()
+            server.sendData(it.id, json)
         }
     }
 

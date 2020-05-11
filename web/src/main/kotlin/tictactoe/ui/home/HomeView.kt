@@ -2,7 +2,6 @@ package tictactoe.ui.home
 
 import challenge.usecase.MessageUseCase
 import de.jensklingenberg.sheasy.model.Coord
-import de.jensklingenberg.sheasy.model.Warrior
 import kotlinx.html.DIV
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.style
@@ -11,6 +10,7 @@ import react.RComponent
 import react.RProps
 import react.dom.*
 import react.setState
+import tictactoe.model.ElementImage
 
 class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.View {
     private val messageUseCase = MessageUseCase()

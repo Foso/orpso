@@ -31,11 +31,11 @@ val ROWS = 6
 val COLS = 7
 fun main() {
 
-    val check = checkWinner(Weapon.Rock(),Weapon.Schere())
+    val check = checkWinner(Weapon.Rock(),Weapon.Scissors())
 
     val elementList = mutableListOf<Warrior>()
 
-    elementList.add(Warrior(Player(0, "X", ""), Weapon.Schere(), Coord(0, 0)))
+    elementList.add(Warrior(Player(0, "X", ""), Weapon.Scissors(), Coord(0, 0)))
 
     printMap(elementList)
     moveChar(Coord(0, 0), Coord(0, 1), elementList)
