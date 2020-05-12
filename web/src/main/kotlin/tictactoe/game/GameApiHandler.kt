@@ -1,8 +1,8 @@
 package tictactoe.game
 
-import de.jensklingenberg.sheasy.model.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
+import de.jensklingenberg.sheasy.model.ClientCommandParser
+import de.jensklingenberg.sheasy.model.ClientCommands
+import de.jensklingenberg.sheasy.model.getClientCommandType
 import org.w3c.dom.MessageEvent
 import org.w3c.dom.WebSocket
 import org.w3c.dom.events.Event
@@ -32,11 +32,6 @@ class GameApiHandler {
 
         when (type) {
 
-            ClientCommands.JOINED -> {
-
-
-            }
-
             ClientCommands.TURN -> {
                 val resource = ClientCommandParser.getTurnCommand(json)
                 observer.onTurn(resource)
@@ -52,15 +47,11 @@ class GameApiHandler {
                 observer.onError(gameJoined)
             }
 
-            null -> {
-
-            }
-            ClientCommands.MESSAGE -> {
-
-            }
             ClientCommands.PLAYER_EVENT -> {
-                val gameState = ClientCommandParser.getPlayerEvent(json).state
+                val gameState = ClientCommandParser.getPlayerEvent(json).response
                 observer.onPlayerEventChanged(gameState)
+            }
+            ClientCommands.MESSAGE, null -> {
 
             }
         }

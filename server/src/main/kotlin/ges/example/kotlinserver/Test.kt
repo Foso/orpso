@@ -10,17 +10,17 @@ import de.jensklingenberg.sheasy.model.*
  */
 
 
-fun moveChar(from: Coord, toCoord: Coord, elementList: MutableList<Warrior>) {
-    val fromChar = elementList.find { it.coord == from }
+fun moveChar(from: Coordinate, toCoordinate: Coordinate, elementList: MutableList<Warrior>) {
+    val fromChar = elementList.find { it.coordinate == from }
 
-    val toChar = elementList.find { it.coord == toCoord }
+    val toChar = elementList.find { it.coordinate == toCoordinate }
 
     if (fromChar == null) {
         return
     } else {
         if (toChar == null) {
             elementList.remove(fromChar)
-            elementList.add(fromChar.copy(coord = toCoord))
+            elementList.add(fromChar.copy(coordinate = toCoordinate))
         }
     }
 
@@ -31,16 +31,16 @@ val ROWS = 6
 val COLS = 7
 fun main() {
 
-    val check = checkWinner(Weapon.Rock(),Weapon.Scissors())
+    val check = checkWinner(Weapon.Rock, Weapon.Scissors)
 
     val elementList = mutableListOf<Warrior>()
 
-    elementList.add(Warrior(Player(0, "X", ""), Weapon.Scissors(), Coord(0, 0)))
+    elementList.add(Warrior(Player(0, "X", ""), Weapon.Scissors, Coordinate(0, 0)))
 
     printMap(elementList)
-    moveChar(Coord(0, 0), Coord(0, 1), elementList)
+    moveChar(Coordinate(0, 0), Coordinate(0, 1), elementList)
     printMap(elementList)
-    moveChar(Coord(0, 1), Coord(0, 2), elementList)
+    moveChar(Coordinate(0, 1), Coordinate(0, 2), elementList)
     printMap(elementList)
 
 }
@@ -49,7 +49,7 @@ private fun printMap(elementList: MutableList<Warrior>) {
     val gameArray = Array(ROWS) { Array(COLS) { "" } }
 
     elementList.forEach {
-        val coord = it.coord
+        val coord = it.coordinate
         gameArray[coord.y][coord.x] = "W"
     }
 

@@ -19,12 +19,11 @@ class NetworkPreferences {
     var hostUri: String = "${window}+${window.location}+${window.location.hostname}"
 
     val hostname = if (hostUri.contains("localhost")) {
-        console.log("HOST "+ window.location.hostname)
+        console.log("HOST " + window.location.hostname)
         "ws://localhost:23567/"
     } else {
         "wss://hidden-plateau-72953.herokuapp.com/"
     }
-
 
 
 }

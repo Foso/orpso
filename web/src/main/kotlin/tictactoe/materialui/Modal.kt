@@ -35,4 +35,4 @@ external interface ModalProps : RProps {
     var open: Boolean
 }
 
-var Modal: RClass<AppBarProps> = ModalImport.default
+var Modal: RClass<ModalProps> = ModalImport.default

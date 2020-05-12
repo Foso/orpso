@@ -17,16 +17,17 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
     private val playerList = mutableListOf<Player>()
     var gameState: GameState = GameState.Lobby
     var activePlayerId = 0
-    private val gameArray = Array<Array<Int>>(3) { Array(3) { -1 } }
-    val elementList = mutableListOf<Warrior>()
-
+    var attacker: Attacker? = null
+    private val elementList = mutableListOf<Warrior>()
+    var attackerDrawWeaponPlayer: Weapon? = null
+    var defenderDrawWeaponPlayer: Weapon? = null
 
     init {
         (0 until GameSettings.COLS).forEach {
-            elementList.add(Warrior(Player(1, "X", ""), Weapon.Flag(), Coord(0, it)))
-            elementList.add(Warrior(Player(1, "X", ""), Weapon.Scissors(), Coord(1, it)))
-            elementList.add(Warrior(Player(0, "X", ""), Weapon.Scissors(), Coord(GameSettings.ROWS - 2, it)))
-            elementList.add(Warrior(Player(0, "X", ""), Weapon.Trap(), Coord(GameSettings.ROWS - 1, it)))
+            elementList.add(Warrior(Player(1, "X", ""), Weapon.Flag, Coordinate(0, it)))
+            elementList.add(Warrior(Player(1, "X", ""), Weapon.Scissors, Coordinate(1, it)))
+            elementList.add(Warrior(Player(0, "X", ""), Weapon.Scissors, Coordinate(GameSettings.ROWS - 2, it)))
+            elementList.add(Warrior(Player(0, "X", ""), Weapon.Trap, Coordinate(GameSettings.ROWS - 1, it)))
         }
     }
 
@@ -38,47 +39,14 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
         }
     }
 
-    override fun onMakeMove(playerId: Int, coord: Coord) {
-        if (gameState != GameState.Started) {
-            sendError(playerId, ClientEvent.ErrorEvent("GAME NOT STARTED"))
-            return
-        }
-        if (activePlayerId != playerId) {
-            sendError(playerId, ClientEvent.ErrorEvent("NOT YOUR MOVE"))
-            return
-        }
-        println("Player " + playerId + " want to make a move on : x: " + coord.x + " y: " + coord.y)
-        if (gameArray[coord.y][coord.x] == -1) {
-            gameArray[coord.y][coord.x] = playerId
 
-
-            nextPlayer()
-
-            val event = ClientEvent.TurnEvent(
-                CurrentTurn(Player(playerId, getSymbol(playerId)), coord),
-                getActivePlayer().id
-            )
-
-            server.sendBroadcast(event.toJson())
-
-
-        } else {
-            sendError(playerId, ClientEvent.ErrorEvent("CAN NOT MOVe"))
-        }
-
-    }
-
-    private fun sendError(playerId: Int, errorEvent: ClientEvent.ErrorEvent) {
+    private fun sendError(playerId: Int, errorEvent: ServerResponse.ErrorEvent) {
         server.sendData(playerId, ClientCommandParser.toJson(errorEvent))
     }
 
     override fun onReset() {
         println("RESET GAME")
-        gameArray.forEachIndexed { index, columns ->
-            columns.forEachIndexed { index2, rows ->
-                gameArray[index][index2] = -1
-            }
-        }
+
         sendGameStateChanged(GameState.Started)
     }
 
@@ -91,7 +59,7 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
         playerList.add(player)
         server.onPlayerAdded(sessionId, player)
 
-        val json2 = ClientEvent.PlayerEvent(PlayerEventState.JOINED(player)).toJson()
+        val json2 = ServerResponse.PlayerEvent(PlayerResponseEvent.JOINED(player)).toJson()
         server.sendData(player.id, json2)
         sendGameStateChanged(GameState.Lobby)
         if (playerList.size == MAX_PLAYERS) {
@@ -104,12 +72,11 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
 
     private fun hideElements(
         playerId: Int,
-        elementList: MutableList<Warrior>
+        elementList: List<Warrior>
     ): List<Warrior> {
         return elementList.map {
-
             if (it.owner.id != playerId && !it.weaponRevealed) {
-                it.copy(weapon = Weapon.Hidden())
+                it.copy(weapon = Weapon.Hidden)
             } else {
                 it
             }
@@ -117,15 +84,50 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
         }
     }
 
-    override fun onMoveChar(playerId: Int, fromCoord: Coord, toCoord: Coord) {
-        val fromChar = elementList.find { it.coord == fromCoord }
+    override fun onReceivedSelectedDrawWeapon(playerId: Int, weapon: Weapon) {
+        defenderDrawWeaponPlayer = Weapon.Paper
+        if (playerId == attacker?.playerId) {
+            attackerDrawWeaponPlayer = weapon
+        } else {
+            defenderDrawWeaponPlayer = weapon
+        }
 
-        if(fromChar?.weapon is Weapon.Trap || fromChar?.weapon is Weapon.Flag){
+        if (attackerDrawWeaponPlayer != null && defenderDrawWeaponPlayer != null) {
+            elementList.replaceAll {
+                when (it.coordinate) {
+                    attacker?.fromCoordinate -> {
+                        it.copy(weapon = attackerDrawWeaponPlayer!!)
+                    }
+                    attacker?.toCoordinate -> {
+                        it.copy(weapon = defenderDrawWeaponPlayer!!)
+                    }
+                    else -> {
+                        it
+                    }
+                }
+            }
+            attacker?.let {
+                gameState = GameState.Started
+                attackerDrawWeaponPlayer = null
+                defenderDrawWeaponPlayer = null
+                onMoveChar(it.playerId, it.fromCoordinate, it.toCoordinate)
+            }
+        }
+    }
+
+    override fun onMoveChar(playerId: Int, fromCoordinate: Coordinate, toCoordinate: Coordinate) {
+        if (gameState != GameState.Started) {
+            return
+        }
+
+        val fromChar = elementList.find { it.coordinate == fromCoordinate }
+
+        if (fromChar?.weapon is Weapon.Trap || fromChar?.weapon is Weapon.Flag) {
             //The trap cant be moved
             return
         }
 
-        val toChar = elementList.find { it.coord == toCoord }
+        val toChar = elementList.find { it.coordinate == toCoordinate }
 
         if (fromChar?.owner?.id == toChar?.owner?.id) {
             //A player cant attack himself
@@ -137,20 +139,13 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
         } else {
             if (toChar == null) {
                 elementList.remove(fromChar)
-                elementList.add(fromChar.copy(coord = toCoord))
+                elementList.add(fromChar.copy(coordinate = toCoordinate))
                 sendGameMap()
             } else {
 
                 when (checkWinner(attackWeapon = fromChar.weapon, defenseWeapon = toChar.weapon)) {
                     MatchState.WIN -> {
-                        if(toChar.weapon is Weapon.Flag){
-                            val json2 = ClientEvent.GameStateChanged(GameState.Ended(true,playerId)).toJson()
-                            server.sendBroadcast(json2)
-                        }
-                        elementList.remove(fromChar)
-                        elementList.remove(toChar)
-                        elementList.add(fromChar.copy(coord = toCoord,weaponRevealed = true))
-                        sendGameMap()
+                        handleMatchWin(toChar, playerId, fromChar, toCoordinate)
 
                     }
                     MatchState.LOOSE -> {
@@ -161,7 +156,9 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
 
                     }
                     MatchState.DRAW -> {
-                        val json2 = ClientEvent.GameStateChanged(GameState.DrawEvent).toJson()
+                        attacker = Attacker(playerId, fromCoordinate, toCoordinate)
+                        gameState = GameState.DrawEvent
+                        val json2 = ServerResponse.GameStateChanged(GameState.DrawEvent).toJson()
                         server.sendBroadcast(json2)
                     }
                 }
@@ -170,17 +167,33 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
 
     }
 
+    private fun handleMatchWin(
+        toChar: Warrior,
+        playerId: Int,
+        fromChar: Warrior,
+        toCoordinate: Coordinate
+    ) {
+        if (toChar.weapon is Weapon.Flag) {
+            val json2 = ServerResponse.GameStateChanged(GameState.Ended(true, playerId)).toJson()
+            server.sendBroadcast(json2)
+        }
+        elementList.remove(fromChar)
+        elementList.remove(toChar)
+        elementList.add(fromChar.copy(coordinate = toCoordinate, weaponRevealed = true))
+        sendGameMap()
+    }
+
     private fun sendGameMap() {
         playerList.forEach {
             val newEle = hideElements(it.id, elementList)
 
-            val json = ClientEvent.GameStateChanged(GameState.GameUpdate(newEle)).toJson()
+            val json = ServerResponse.GameStateChanged(GameState.GameUpdate(newEle)).toJson()
             server.sendData(it.id, json)
         }
     }
 
     private fun sendGameStateChanged(gameState: GameState) {
-        val json2 = ClientEvent.GameStateChanged(gameState).toJson()
+        val json2 = ServerResponse.GameStateChanged(gameState).toJson()
         server.sendBroadcast(json2)
     }
 
@@ -199,3 +212,5 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
     }
 
 }
+
+class Attacker(val playerId: Int, val fromCoordinate: Coordinate, val toCoordinate: Coordinate)

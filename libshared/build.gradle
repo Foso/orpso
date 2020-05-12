@@ -13,9 +13,7 @@ plugins {
 }
 
 
-
 kotlin {
-
 
 
     js {
@@ -41,7 +39,7 @@ kotlin {
         }
     }
 
-       jvm()
+    jvm()
 
 
     sourceSets {
@@ -57,7 +55,7 @@ kotlin {
         jvmMain {
             resources.srcDirs += "resources"
             dependencies {
-               // implementation 'de.jodamob.kotlin:kotlin-runner-junit4:0.3.1'
+                // implementation 'de.jodamob.kotlin:kotlin-runner-junit4:0.3.1'
 
                 implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
                 implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"

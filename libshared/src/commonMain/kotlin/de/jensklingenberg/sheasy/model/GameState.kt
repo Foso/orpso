@@ -6,8 +6,10 @@ import kotlinx.serialization.Serializable
 sealed class GameState {
     @Serializable
     object NewGame : GameState()
+
     @Serializable
     object Lobby : GameState()
+
     @Serializable
     object Started : GameState()
 
@@ -15,9 +17,9 @@ sealed class GameState {
     object DrawEvent : GameState()
 
     @Serializable
-    class GameUpdate(val warrior: List<Warrior>): GameState()
+    class GameUpdate(val warrior: List<Warrior>) : GameState()
 
     @Serializable
-    class Ended(val isWon: Boolean,val winnerID: Int) : GameState()
+    class Ended(val isWon: Boolean, val winnerID: Int) : GameState()
 
 }

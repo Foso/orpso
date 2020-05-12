@@ -1,7 +1,10 @@
 package tictactoe.ui.home
 
 import challenge.usecase.MessageUseCase
-import de.jensklingenberg.sheasy.model.Coord
+import components.materialui.Modal
+import de.jensklingenberg.sheasy.model.Coordinate
+import de.jensklingenberg.sheasy.model.Weapon
+import kotlinx.css.Contain
 import kotlinx.html.DIV
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.style
@@ -22,11 +25,10 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
     override fun HomeContract.HomeViewState.init() {
         imageList = emptyList()
-        gameArray = Array(6) { Array(7) { "" } }
-        overlayArray = Array(6) { Array(7) { "" } }
         showSnackbar = false
         gameStateText = "Hallo"
         overlayList = emptyList()
+        showChooseWeaponModal=false
     }
 
     override fun componentDidMount() {
@@ -37,6 +39,76 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
     override fun RBuilder.render() {
 
         messageUseCase.showErrorSnackbar(this, state.errorMessage, snackbarVisibility())
+
+        div {
+            Modal {
+                attrs {
+                    this.open=state.showChooseWeaponModal
+                }
+
+                div {
+                    div{
+                        img {
+                            attrs {
+                                height = "50"
+                                width = "50"
+                                onClickFunction = {
+                                    // presenter.onCellClicked(Coordinate(rowIndex, colIndex))
+                                    presenter.onWeaponChoosed(Weapon.Scissors)
+                                }
+
+                                src =
+                                    "images/scissors_blue.svg"
+
+                            }
+                        }
+                        +"Scissors"
+
+                    }
+
+                    div{
+                        img {
+                            attrs {
+                                height = "50"
+                                width = "50"
+                                onClickFunction = {
+                                    // presenter.onCellClicked(Coordinate(rowIndex, colIndex))
+                                    presenter.onWeaponChoosed(Weapon.Rock)
+                                }
+
+                                src =
+                                    "images/rock_blue.svg"
+
+                            }
+                        }
+                        +"Rock"
+
+                    }
+
+                    div{
+                        img {
+                            attrs {
+                                height = "50"
+                                width = "50"
+                                onClickFunction = {
+                                    // presenter.onCellClicked(Coordinate(rowIndex, colIndex))
+                                    presenter.onWeaponChoosed(Weapon.Paper)
+                                }
+
+                                src =
+                                    "images/paper_blue.svg"
+
+                            }
+                        }
+                        +"Paper"
+
+                    }
+                }
+
+
+            }
+        }
+
 
 
         div("imagesGrid") {
@@ -103,23 +175,16 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
                                             height = "50"
                                             width = "50"
                                             onClickFunction = {
-                                                presenter.onCellClicked(Coord(rowIndex, colIndex))
+                                                presenter.onCellClicked(Coordinate(rowIndex, colIndex))
                                             }
 
                                             val overlayItem = state.overlayList.find {
-                                                it == Coord(
+                                                it.coordinate == Coordinate(
                                                     rowIndex,
                                                     colIndex
                                                 )
                                             }
-                                            src = if (overlayItem
-                                                != null
-                                            ) {
-
-                                                "images/Letter_o.svg"
-                                            } else {
-                                                ""
-                                            }
+                                            src =  overlayItem?.imgPath ?: ""
                                         }
                                     }
                                 }
@@ -146,13 +211,13 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
                                         attrs {
                                             height = "50"
                                             width = "50"
-                                            val elementItem =state.imageList.find {
-                                                it.coord == Coord(
+                                            val elementItem = state.imageList.find {
+                                                it.coordinate == Coordinate(
                                                     rowIndex,
                                                     colIndex
                                                 )
                                             }
-                                            src = elementItem?.imgPath?:""
+                                            src = elementItem?.imgPath ?: ""
 
                                         }
                                     }
@@ -171,10 +236,8 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
     }
 
-    override fun setCellData(coord: Coord, playerValue: String) {
-        setState {
-            this.gameArray[coord.y][coord.x] = playerValue
-        }
+    override fun setCellData(coordinate: Coordinate, playerValue: String) {
+
 
     }
 
@@ -186,10 +249,7 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
     }
 
     override fun setGameData(map: Array<Array<String>>) {
-        setState {
-            // this.gameArray = map
-            this.overlayArray = Array(6) { Array(7) { "" } }
-        }
+
     }
 
     override fun setPlayerId(id: Int) {
@@ -211,9 +271,21 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
         }
     }
 
-    override fun setOverlayList(overlays: List<Coord>) {
+    override fun setOverlayList(overlays: List<ElementImage>) {
         setState {
             this.overlayList = overlays
+        }
+    }
+
+    override fun showChooseWeaponDialog() {
+        setState {
+            this.showChooseWeaponModal=true
+        }
+    }
+
+    override fun hideChooseWeaponDialog() {
+        setState {
+            this.showChooseWeaponModal=false
         }
     }
 }

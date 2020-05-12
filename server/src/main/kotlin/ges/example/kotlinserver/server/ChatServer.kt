@@ -23,12 +23,12 @@ import java.util.concurrent.atomic.AtomicInteger
 class ChatServer : RpsGameContract.RpsGameServer {
 
     private val gamePresenter: RpsGameContract.Presenter =
-            RpsGamePresenter(this)
+        RpsGamePresenter(this)
 
     /**
      * Atomic counter used to get unique user-names based on the maxiumum users the server had.
      */
-    val usersCounter = AtomicInteger()
+    private val usersCounter = AtomicInteger()
 
     /**
      * A concurrent map associating session IDs to user names.
@@ -201,29 +201,32 @@ class ChatServer : RpsGameContract.RpsGameServer {
         val commandType = getServerCommandType(command)
 
         when (commandType) {
-            ServerCommands.MOVECHAR -> {
+            ServerRequestTypes.MOVECHAR -> {
                 val cmd = ServerCommandParser.getMoveChar(command)
-                gamePresenter.onMoveChar(playerId, cmd.fromCoord,cmd.toCoord)
+                gamePresenter.onMoveChar(playerId, cmd.fromCoordinate, cmd.toCoordinate)
             }
-            ServerCommands.MAKETURN -> {
-                val cmd = ServerCommandParser.getMakeMove(command)
-                gamePresenter.onMakeMove(playerId, cmd.coord)
-            }
-            ServerCommands.RESET -> {
+
+
+            ServerRequestTypes.RESET -> {
                 gamePresenter.onReset()
                 members.clear()
             }
 
-            ServerCommands.JOINGAME -> {
+            ServerRequestTypes.JOINGAME -> {
                 if (!playersSessions.containsKey(sessionId)) {
                     gamePresenter.onAddPlayer(sessionId)
                 }
             }
-            ServerCommands.UNKNOWN,
-            ServerCommands.ERROR,
-            ServerCommands.MESSAGE,
-            null
-            -> {
+
+            ServerRequestTypes.PLAYEREVENT -> {
+                val cmd = ServerCommandParser.getPlayerRequest(command)
+                val event = cmd.playerRequestEvent
+                when (event) {
+                    is PlayerRequestEvent.SelectedDrawWeapon -> {
+                        gamePresenter.onReceivedSelectedDrawWeapon(playerId,event.weapon)
+                        println(event.weapon)
+                    }
+                }
             }
         }
         // game.makeMove(playerId,)
@@ -240,9 +243,9 @@ class ChatServer : RpsGameContract.RpsGameServer {
                 when {
                     newName.isEmpty() -> sendTo(sessionId, "server::help", "/user [newName]")
                     newName.length > 50 -> sendTo(
-                            sessionId,
-                            "server::help",
-                            "new name is too long: 50 characters limit"
+                        sessionId,
+                        "server::help",
+                        "new name is too long: 50 characters limit"
                     )
                     else -> memberRenamed(sessionId, newName)
                 }
@@ -251,9 +254,9 @@ class ChatServer : RpsGameContract.RpsGameServer {
             command.startsWith("/help") -> help(sessionId)
             // If no commands matched at this point, we notify about it.
             command.startsWith("/") -> sendTo(
-                    sessionId,
-                    "server::help",
-                    "Unknown command ${command.takeWhile { !it.isWhitespace() }}"
+                sessionId,
+                "server::help",
+                "Unknown command ${command.takeWhile { !it.isWhitespace() }}"
             )
             // Handle a normal message.
             else -> {
@@ -272,11 +275,11 @@ class ChatServer : RpsGameContract.RpsGameServer {
         val sessionId = playersSessions.filter { it.value.id == playerId }.keys.first()
 
         GlobalScope.launch {
-            sendMessage(sessionId,data)
+            sendMessage(sessionId, data)
         }
     }
 
-    override fun onPlayerAdded(sessionId:String,player: Player) {
+    override fun onPlayerAdded(sessionId: String, player: Player) {
         playersSessions[sessionId] = player
 
     }

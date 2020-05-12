@@ -3,24 +3,24 @@ package de.jensklingenberg.sheasy.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class Weapon() {
+sealed class Weapon {
     @Serializable
-    class Scissors : Weapon()
+    object Scissors : Weapon()
 
     @Serializable
-    class Papier : Weapon()
+    object Paper : Weapon()
 
     @Serializable
-    class Rock : Weapon()
+    object Rock : Weapon()
 
     @Serializable
-    class Trap : Weapon()
+    object Trap : Weapon()
 
     @Serializable
-    class Flag : Weapon()
+    object Flag : Weapon()
 
     @Serializable
-    class Hidden : Weapon()
+    object Hidden : Weapon()
 }
 
 fun getWeaponImagePath(id: Int, weapon: Weapon): String {
@@ -72,7 +72,7 @@ fun getWeaponImagePath(id: Int, weapon: Weapon): String {
 
     return when (weapon) {
         is Weapon.Scissors -> schere(id)
-        is Weapon.Papier -> paper(id)
+        is Weapon.Paper -> paper(id)
         is Weapon.Rock -> rock(id)
         is Weapon.Trap -> trap(id)
         is Weapon.Flag -> flag(id)

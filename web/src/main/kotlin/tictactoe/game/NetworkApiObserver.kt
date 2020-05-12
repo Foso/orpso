@@ -1,14 +1,14 @@
 package tictactoe.game
 
-import de.jensklingenberg.sheasy.model.ClientEvent
+import de.jensklingenberg.sheasy.model.ServerResponse
 import de.jensklingenberg.sheasy.model.GameState
-import de.jensklingenberg.sheasy.model.PlayerEventState
+import de.jensklingenberg.sheasy.model.PlayerResponseEvent
 
 interface NetworkApiObserver {
 
 
-    fun onTurn(turnEvent: ClientEvent.TurnEvent)
+    fun onTurn(turnEvent: ServerResponse.TurnEvent)
     fun onGameStateChanged(gameState: GameState)
-    fun onPlayerEventChanged(gameState: PlayerEventState)
-    fun onError(gameJoined: ClientEvent.ErrorEvent)
+    fun onPlayerEventChanged(gameResponse: PlayerResponseEvent)
+    fun onError(gameJoined: ServerResponse.ErrorEvent)
 }

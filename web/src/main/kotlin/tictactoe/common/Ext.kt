@@ -1,9 +1,5 @@
 package de.jensklingenberg.sheasy.web.ui.common
 
-import kotlinx.html.CommonAttributeGroupFacade
-import kotlinx.html.style
-
-
 
 fun styleProps(textAlign: String = "", display: String = "", width: String = ""): String {
     return kotlinext.js.js {

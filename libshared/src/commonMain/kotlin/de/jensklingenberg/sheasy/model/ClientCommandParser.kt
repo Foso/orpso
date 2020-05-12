@@ -9,24 +9,24 @@ class ClientCommandParser {
             Json(JsonConfiguration.Stable)
 
 
-        fun getTurnCommand(jsonStr: String): ClientEvent.TurnEvent {
-            return json.parse(ClientEvent.TurnEvent.serializer(), jsonStr)
+        fun getTurnCommand(jsonStr: String): ServerResponse.TurnEvent {
+            return json.parse(ServerResponse.TurnEvent.serializer(), jsonStr)
         }
 
-        fun getGameStateChangedCommand(jsonStr: String): ClientEvent.GameStateChanged {
-            return json.parse(ClientEvent.GameStateChanged.serializer(), jsonStr)
+        fun getGameStateChangedCommand(jsonStr: String): ServerResponse.GameStateChanged {
+            return json.parse(ServerResponse.GameStateChanged.serializer(), jsonStr)
         }
 
-        fun getPlayerEvent(jsonStr: String): ClientEvent.PlayerEvent {
-            return json.parse(ClientEvent.PlayerEvent.serializer(), jsonStr)
+        fun getPlayerEvent(jsonStr: String): ServerResponse.PlayerEvent {
+            return json.parse(ServerResponse.PlayerEvent.serializer(), jsonStr)
         }
 
-        fun getErrorCommand(jsonStr: String): ClientEvent.ErrorEvent {
-            return json.parse(ClientEvent.ErrorEvent.serializer(), jsonStr)
+        fun getErrorCommand(jsonStr: String): ServerResponse.ErrorEvent {
+            return json.parse(ServerResponse.ErrorEvent.serializer(), jsonStr)
         }
 
-        fun toJson(cmd: ClientEvent.ErrorEvent): String {
-            return json.stringify(ClientEvent.ErrorEvent.serializer(), cmd)
+        fun toJson(cmd: ServerResponse.ErrorEvent): String {
+            return json.stringify(ServerResponse.ErrorEvent.serializer(), cmd)
         }
 
     }

@@ -32,7 +32,7 @@ class ChatApplication {
 
     fun start() {
         val port = System.getenv("PORT")?.toInt() ?: 23567
-        println("SERVER STARTED on port: "+port)
+        println("SERVER STARTED on port: " + port)
 
 
         embeddedServer(Netty, port) {
@@ -92,7 +92,7 @@ class ChatApplication {
                                 // Now it is time to process the text sent from the user.
                                 // At this point we have context about this connection, the session, the text and the server.
                                 // So we have everything we need.
-                                
+
                                 server.receivedMessage(session.id, frame.readText())
                             }
                         }
@@ -110,8 +110,6 @@ class ChatApplication {
 
         }.start(wait = true)
     }
-
-
 
 
 }

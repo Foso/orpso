@@ -7,10 +7,10 @@ import tictactoe.game.GameRepository
 import tictactoe.model.ElementImage
 import kotlin.browser.window
 
-class GameSettings{
-    companion object{
-        val ROWS = 6
-        val COLS = 7
+class GameSettings {
+    companion object {
+        const val ROWS = 6
+        const val COLS = 7
     }
 }
 
@@ -19,29 +19,29 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
 
     private val gameDataSource: GameDataSource = GameRepository()
     var selectedWarrior: Warrior? = null
-    var overlayArrows: MutableList<Coord> = mutableListOf()
+    var overlayArrows: MutableList<Coordinate> = mutableListOf()
 
     override fun onCreate() {
         gameDataSource.prepareGame()
 
         gameDataSource.observeGameState().subscribe(onNext = { state ->
             when (state) {
-                GameState.NewGame -> {
+                is GameState.NewGame -> {
                 }
-                GameState.Started -> {
+                is GameState.Started -> {
                     view.setgameStateText("GAME STARTED")
+                }
+
+                is GameState.Lobby -> {
+                    view.setgameStateText("WAITING FOR OPPONENTS")
                 }
                 is GameState.Ended -> {
                     window.alert("PLAYER ${state.winnerID} HAS WON " + state.isWon)
                     view.setgameStateText("GAME ENDED")
                 }
-                is GameState.Lobby -> {
-                    view.setgameStateText("WAITING FOR OPPONENTS")
-                }
+
                 is GameState.DrawEvent -> {
-                    window.alert("CHOOSE WEAPON")
-
-
+                    view.showChooseWeaponDialog()
                 }
                 is GameState.GameUpdate -> {
 
@@ -49,9 +49,6 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
             }
         })
 
-        gameDataSource.observeGameChanges().subscribe(onNext = {
-            view.setGameData(it)
-        })
 
         gameDataSource.observeMap().subscribe(onNext = { it ->
             if (it.isNotEmpty()) {
@@ -60,7 +57,7 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
                 val imgList = elementList.map {
                     ElementImage(
                         getWeaponImagePath(it.owner.id, it.weapon),
-                        it.coord
+                        it.coordinate
                     )
 
                 }
@@ -80,24 +77,27 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
         //myWebSocket?.send(message)
     }
 
-    override fun onCellClicked(coord: Coord) {
-        val selectedOverlay = overlayArrows.find { it == coord }
-        if(selectedOverlay!=null){
-            if(selectedWarrior!=null){
-                console.log("Move from: "+selectedWarrior?.coord+ " to "+coord)
-                gameDataSource.onMoveChar(selectedWarrior!!.coord,coord)
+    override fun onCellClicked(coordinate: Coordinate) {
+        val selectedOverlay = overlayArrows.find { it == coordinate }
+        if (selectedOverlay != null) {
+            if (selectedWarrior != null) {
+                console.log("Move from: " + selectedWarrior?.coordinate + " to " + coordinate)
+                gameDataSource.onMoveChar(selectedWarrior!!.coordinate, coordinate)
 
-                view.setOverlayList(overlayArrows)
+
                 overlayArrows.clear()
+                view.setOverlayList(overlayArrows.map {
+                    ElementImage( "",it)
+                })
             }
-        }else{
+        } else {
             overlayArrows.clear()
-            val selected = elementList.find { it.coord == coord }
+            val selected = elementList.find { it.coordinate == coordinate }
 
-            if(selected?.weapon is Weapon.Trap ||
+            if (selected?.weapon is Weapon.Trap ||
                 selected?.weapon is Weapon.Flag
-               // || selected?.weapon is Weapon.Hidden
-            ){
+            // || selected?.weapon is Weapon.Hidden
+            ) {
                 return
             }
 
@@ -105,26 +105,28 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
                 selectedWarrior = selected
 
                 //Left
-                if(selectedWarrior?.coord?.x!=0){
-                    overlayArrows.add(coord.copy(x = coord.x - 1))
+                if (selectedWarrior?.coordinate?.x != 0) {
+                    overlayArrows.add(coordinate.copy(x = coordinate.x - 1))
                 }
 
                 //Right
-                if(selectedWarrior?.coord?.x!=GameSettings.COLS){
-                    overlayArrows.add(coord.copy(x = coord.x + 1))
+                if (selectedWarrior?.coordinate?.x != GameSettings.COLS) {
+                    overlayArrows.add(coordinate.copy(x = coordinate.x + 1))
                 }
 
                 //Top
-                if(selectedWarrior?.coord?.y!=0){
-                    overlayArrows.add(coord.copy(coord.y-1))
+                if (selectedWarrior?.coordinate?.y != 0) {
+                    overlayArrows.add(coordinate.copy(coordinate.y - 1))
                 }
 
                 //Bottom
-                if(selectedWarrior?.coord?.y!=GameSettings.ROWS){
-                    overlayArrows.add(coord.copy(coord.y+1))
+                if (selectedWarrior?.coordinate?.y != GameSettings.ROWS) {
+                    overlayArrows.add(coordinate.copy(coordinate.y + 1))
                 }
 
-                view.setOverlayList(overlayArrows)
+                view.setOverlayList(overlayArrows.map {
+                    ElementImage( "images/Letter_o.svg",it)
+                })
             }
         }
 
@@ -132,12 +134,16 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
     }
 
     override fun reset() {
-
         gameDataSource.requestReset()
     }
 
     override fun joinGame() {
         gameDataSource.join()
+    }
+
+    override fun onWeaponChoosed(weapon: Weapon) {
+        gameDataSource.onSelectedDrawWeapon(weapon)
+        view.hideChooseWeaponDialog()
     }
 
 }

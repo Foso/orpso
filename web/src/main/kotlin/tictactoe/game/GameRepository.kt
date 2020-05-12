@@ -1,15 +1,11 @@
 package tictactoe.game
 
-import com.badoo.reaktive.completable.Completable
-import com.badoo.reaktive.completable.completable
 import com.badoo.reaktive.observable.Observable
 import com.badoo.reaktive.subject.behavior.BehaviorSubject
 import de.jensklingenberg.sheasy.model.*
 
 class GameRepository : GameDataSource, NetworkApiObserver {
 
-    private val gameTable = Array<Array<String>>(3) { Array(3) { "-" } }
-    private val gameSubject: BehaviorSubject<Array<Array<String>>> = BehaviorSubject(gameTable)
     private var activePlayerId: Int? = null
     private val warriorSubject: BehaviorSubject<List<Warrior>> = BehaviorSubject(emptyList())
 
@@ -20,62 +16,56 @@ class GameRepository : GameDataSource, NetworkApiObserver {
     override fun prepareGame() {
         gameApiHandler.start(this)
     }
-    override fun observeGameChanges(): Observable<Array<Array<String>>> = gameSubject
+
 
     override fun observeGameState(): Observable<GameState> = gameStateSubject
 
     override fun observePlayer(): Observable<Int> = playerSubject
 
     override fun observeMap(): Observable<List<Warrior>> = warriorSubject
-    override fun onMoveChar( fromCoord: Coord, toCoord: Coord) {
+    override fun onMoveChar(fromCoordinate: Coordinate, toCoordinate: Coordinate) {
         console.log("onMoveChar============================0")
-        val json = ServerCommand.MoveCharCommand(fromCoord, toCoord).toJson()
+        val json = ServerRequest.MoveCharRequest(fromCoordinate, toCoordinate).toJson()
         gameApiHandler.sendMessage(json)
+    }
+
+    override fun onSelectedDrawWeapon(weapon: Weapon) {
+        val jsonData = ServerRequest.PlayerRequest(PlayerRequestEvent.SelectedDrawWeapon(weapon)).toJson()
+        gameApiHandler.sendMessage(jsonData)
     }
 
 
     override fun join() {
-        val jsonData = ServerCommand.JoinGameCommand().toJson()
+        val jsonData = ServerRequest.JoinGameRequest().toJson()
         gameApiHandler.sendMessage(jsonData)
     }
 
-    override fun makeAMove(coord: Coord) {
-            val makeMoveCommand = ServerCommand.MakeTurnCommand(coord)
-            val jsonData = ServerCommandParser.toJson(makeMoveCommand)
-            gameApiHandler.sendMessage(jsonData)
-    }
+
 
     override fun requestReset() {
-        val jsonData = ServerCommand.ResetCommand().toJson()
-        val json = ServerCommand.MoveCharCommand(Coord(0,0), Coord(0,1)).toJson()
-        gameApiHandler.sendMessage(json)
-      //  reset()
+        val jsonData = ServerRequest.ResetRequest().toJson()
+        gameApiHandler.sendMessage(jsonData)
     }
 
     fun onNewGame() {
         reset()
     }
+
     private fun reset() {
         println("RESET GAME")
-        gameTable.forEachIndexed { index, columns ->
-            columns.forEachIndexed { index2, _ ->
-                gameTable[index][index2] = "-"
-            }
-        }
-        gameSubject.onNext(gameTable)
+
     }
 
-    override fun onTurn(turnEvent: ClientEvent.TurnEvent) {
+    override fun onTurn(turnEvent: ServerResponse.TurnEvent) {
         val turn = turnEvent.turn
-        val coord = turn.coord
+        val coord = turn.coordinate
         val player = turn.player
         val symbol = player.symbol
-        gameTable[coord.y][coord.x] = symbol
-        gameSubject.onNext(gameTable)
+
     }
 
     override fun onGameStateChanged(gameState: GameState) {
-        when(gameState){
+        when (gameState) {
             is GameState.GameUpdate -> {
                 warriorSubject.onNext(gameState.warrior)
             }
@@ -83,16 +73,16 @@ class GameRepository : GameDataSource, NetworkApiObserver {
         gameStateSubject.onNext(gameState)
     }
 
-    override fun onPlayerEventChanged(gameState: PlayerEventState) {
-        when(gameState){
-            is PlayerEventState.JOINED -> {
-                activePlayerId = gameState.yourPlayer.id
-                playerSubject.onNext(gameState.yourPlayer.id)
+    override fun onPlayerEventChanged(gameResponse: PlayerResponseEvent) {
+        when (gameResponse) {
+            is PlayerResponseEvent.JOINED -> {
+                activePlayerId = gameResponse.yourPlayer.id
+                playerSubject.onNext(gameResponse.yourPlayer.id)
             }
         }
     }
 
-    override fun onError(gameJoined: ClientEvent.ErrorEvent) {
+    override fun onError(gameJoined: ServerResponse.ErrorEvent) {
 
     }
 }
