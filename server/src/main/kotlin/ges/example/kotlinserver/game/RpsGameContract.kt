@@ -17,5 +17,9 @@ interface RpsGameContract {
         fun onAddPlayer(sessionId: String)
         fun onMoveChar(playerId: Int, fromCoordinate: Coordinate, toCoordinate: Coordinate)
         fun onReceivedSelectedDrawWeapon(playerId: Int, weapon: Weapon)
+        fun shuffle(playerId: Int)
+        fun addFlag(playerId: Int, coordinate: Coordinate)
+        fun addTrap(playerId: Int, coordinate: Coordinate)
+        fun onPlayerReady(playerId: Int)
     }
 }

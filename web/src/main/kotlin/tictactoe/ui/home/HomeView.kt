@@ -4,18 +4,75 @@ import challenge.usecase.MessageUseCase
 import components.materialui.Modal
 import de.jensklingenberg.sheasy.model.Coordinate
 import de.jensklingenberg.sheasy.model.Weapon
-import kotlinx.css.Contain
 import kotlinx.html.DIV
 import kotlinx.html.js.onClickFunction
-import kotlinx.html.style
-import react.RBuilder
-import react.RComponent
-import react.RProps
+import org.w3c.dom.CanvasRenderingContext2D
+import org.w3c.dom.HTMLCanvasElement
+import org.w3c.dom.HTMLImageElement
+import react.*
 import react.dom.*
-import react.setState
 import tictactoe.model.ElementImage
+import kotlin.browser.document
+import kotlin.browser.window
+import kotlin.lazy
+
+fun getImage(path: String): HTMLImageElement {
+    val image = window.document.createElement("img") as HTMLImageElement
+    image.src = path
+    return image
+}
+
+
+class MyCanvas : RComponent<RProps, RState>() {
+
+    init {
+
+    }
+
+    override fun componentDidMount() {
+        val canvas2 = document.createElement("canvas") as HTMLCanvasElement
+        val context2 = canvas2.getContext("2d") as CanvasRenderingContext2D
+        context2.canvas.width = window.innerWidth.toInt();
+        context2.canvas.height = 300
+        document.body?.appendChild(canvas2)
+
+
+        context2.drawImage(getImage("http://try.kotlinlang.org/static/images/canvas/Kotlin-logo.png"), 50.0, 50.0)
+
+    }
+
+    override fun RBuilder.render() {
+
+        canvas("mycan") {
+            attrs {
+                height = "300"
+
+            }
+
+            img {
+                attrs {
+                    height = "50"
+                    width = "50"
+
+                    src =
+                        "images/scissors_blue.svg"
+
+                }
+            }
+        }
+
+
+        //   val tcan = can.getContext("2d") as CanvasRenderingContext2D
+
+
+    }
+
+}
+
 
 class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.View {
+
+
     private val messageUseCase = MessageUseCase()
 
     private val presenter: HomeContract.Presenter by lazy {
@@ -28,7 +85,7 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
         showSnackbar = false
         gameStateText = "Hallo"
         overlayList = emptyList()
-        showChooseWeaponModal=false
+        showChooseWeaponModal = false
     }
 
     override fun componentDidMount() {
@@ -40,14 +97,78 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
         messageUseCase.showErrorSnackbar(this, state.errorMessage, snackbarVisibility())
 
+        drawModal()
+
+        div("imagesGrid") {
+
+            //mCanvas()
+
+            toolbar()
+
+            div("container") {
+                gameField()
+
+                gameOverlay()
+            }
+
+            button {
+                +"Shuffle"
+            }
+
+            button {
+                attrs {
+                    text("Start Game")
+                    onClickFunction = {
+                        presenter.startGame()
+                    }
+                }
+            }
+
+            p {
+                +state.gameStateText
+            }
+
+        }
+    }
+
+    private fun RDOMBuilder<DIV>.toolbar() {
+        button {
+            attrs {
+                text("Join Game")
+                onClickFunction = {
+                    presenter.joinGame()
+                }
+            }
+        }
+
+        button {
+            attrs {
+                text("Reset")
+                onClickFunction = {
+                    presenter.reset()
+                }
+            }
+        }
+
+        button {
+            attrs {
+                text("Player: " + state.playerId)
+                onClickFunction = {
+
+                }
+            }
+        }
+    }
+
+    private fun RBuilder.drawModal() {
         div {
             Modal {
                 attrs {
-                    this.open=state.showChooseWeaponModal
+                    this.open = state.showChooseWeaponModal
                 }
 
                 div {
-                    div{
+                    div {
                         img {
                             attrs {
                                 height = "50"
@@ -66,7 +187,7 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
                     }
 
-                    div{
+                    div {
                         img {
                             attrs {
                                 height = "50"
@@ -85,7 +206,7 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
                     }
 
-                    div{
+                    div {
                         img {
                             attrs {
                                 height = "50"
@@ -107,55 +228,6 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
 
             }
-        }
-
-
-
-        div("imagesGrid") {
-            attrs {
-                style = kotlinext.js.js {
-                    margin = "0"
-                }
-            }
-
-
-            button {
-                attrs {
-                    text("Join Game")
-                    onClickFunction = {
-                        presenter.joinGame()
-                    }
-                }
-            }
-
-            button {
-                attrs {
-                    text("Reset")
-                    onClickFunction = {
-                        presenter.reset()
-                    }
-                }
-            }
-
-            button {
-                attrs {
-                    text("Player: " + state.playerId)
-                    onClickFunction = {
-
-                    }
-                }
-            }
-
-            div("container") {
-                gameField()
-
-                gameOverlay()
-            }
-
-            p {
-                +state.gameStateText
-            }
-
         }
     }
 
@@ -184,7 +256,7 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
                                                     colIndex
                                                 )
                                             }
-                                            src =  overlayItem?.imgPath ?: ""
+                                            src = overlayItem?.imgPath ?: ""
                                         }
                                     }
                                 }
@@ -279,13 +351,13 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
     override fun showChooseWeaponDialog() {
         setState {
-            this.showChooseWeaponModal=true
+            this.showChooseWeaponModal = true
         }
     }
 
     override fun hideChooseWeaponDialog() {
         setState {
-            this.showChooseWeaponModal=false
+            this.showChooseWeaponModal = false
         }
     }
 }
@@ -293,6 +365,7 @@ class HomeView : RComponent<RProps, HomeContract.HomeViewState>(), HomeContract.
 
 fun RBuilder.home() = child(HomeView::class) {}
 
+fun RBuilder.mCanvas() = child(MyCanvas::class) {}
 
 
 

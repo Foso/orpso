@@ -13,18 +13,11 @@ fun ServerRequest.ResetRequest.toJson(): String {
     return Json(JsonConfiguration.Stable).stringify(ServerRequest.ResetRequest.serializer(), this)
 }
 
-fun ServerRequest.JoinGameRequest.toJson(): String {
-    return Json(JsonConfiguration.Stable).stringify(ServerRequest.JoinGameRequest.serializer(), this)
-}
+
 
 fun ServerRequest.PlayerRequest.toJson(): String {
     return Json(JsonConfiguration.Stable).stringify(ServerRequest.PlayerRequest.serializer(), this)
 }
-
-fun ServerRequest.MoveCharRequest.toJson(): String {
-    return Json(JsonConfiguration.Stable).stringify(ServerRequest.MoveCharRequest.serializer(), this)
-}
-
 
 fun getServerCommandType(toString: String): ServerRequestTypes? {
 

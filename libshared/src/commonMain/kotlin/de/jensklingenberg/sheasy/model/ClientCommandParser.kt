@@ -9,10 +9,6 @@ class ClientCommandParser {
             Json(JsonConfiguration.Stable)
 
 
-        fun getTurnCommand(jsonStr: String): ServerResponse.TurnEvent {
-            return json.parse(ServerResponse.TurnEvent.serializer(), jsonStr)
-        }
-
         fun getGameStateChangedCommand(jsonStr: String): ServerResponse.GameStateChanged {
             return json.parse(ServerResponse.GameStateChanged.serializer(), jsonStr)
         }

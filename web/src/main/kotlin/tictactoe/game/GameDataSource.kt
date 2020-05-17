@@ -1,12 +1,10 @@
 package tictactoe.game
 
 import com.badoo.reaktive.observable.Observable
-import de.jensklingenberg.sheasy.model.Coordinate
-import de.jensklingenberg.sheasy.model.GameState
-import de.jensklingenberg.sheasy.model.Warrior
-import de.jensklingenberg.sheasy.model.Weapon
+import de.jensklingenberg.sheasy.model.*
 
 interface GameDataSource {
+    fun getPlayer():Player?
     fun prepareGame()
     fun join()
     fun observeGameState(): Observable<GameState>
@@ -15,5 +13,9 @@ interface GameDataSource {
     fun observeMap(): Observable<List<Warrior>>
     fun onMoveChar(fromCoordinate: Coordinate, toCoordinate: Coordinate)
     fun onSelectedDrawWeapon(weapon: Weapon)
+    fun observeNextTurn(): Observable<Player>
+    fun addFlag(coordinate: Coordinate)
+    fun addTrap(coordinate: Coordinate)
+    fun startGame()
 }
 

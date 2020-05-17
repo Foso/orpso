@@ -6,8 +6,6 @@ import de.jensklingenberg.sheasy.model.PlayerResponseEvent
 
 interface NetworkApiObserver {
 
-
-    fun onTurn(turnEvent: ServerResponse.TurnEvent)
     fun onGameStateChanged(gameState: GameState)
     fun onPlayerEventChanged(gameResponse: PlayerResponseEvent)
     fun onError(gameJoined: ServerResponse.ErrorEvent)

@@ -1,0 +1,11 @@
+
+        @startuml
+                      
+        Bob --> Alice: My name
+"Bob" -> Alice: My name
+== Repetition ==
+==  ==
+== Repetition ==
+"Jens" -> Bob: Another authentication Request
+        @enduml
+    

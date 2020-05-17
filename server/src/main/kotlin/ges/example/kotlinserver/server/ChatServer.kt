@@ -202,8 +202,8 @@ class ChatServer : RpsGameContract.RpsGameServer {
 
         when (commandType) {
             ServerRequestTypes.MOVECHAR -> {
-                val cmd = ServerCommandParser.getMoveChar(command)
-                gamePresenter.onMoveChar(playerId, cmd.fromCoordinate, cmd.toCoordinate)
+               // val cmd = ServerCommandParser.getMoveChar(command)
+              //  gamePresenter.onMoveChar(playerId, cmd.fromCoordinate, cmd.toCoordinate)
             }
 
 
@@ -212,19 +212,35 @@ class ChatServer : RpsGameContract.RpsGameServer {
                 members.clear()
             }
 
-            ServerRequestTypes.JOINGAME -> {
-                if (!playersSessions.containsKey(sessionId)) {
-                    gamePresenter.onAddPlayer(sessionId)
-                }
-            }
-
             ServerRequestTypes.PLAYEREVENT -> {
                 val cmd = ServerCommandParser.getPlayerRequest(command)
                 val event = cmd.playerRequestEvent
                 when (event) {
                     is PlayerRequestEvent.SelectedDrawWeapon -> {
-                        gamePresenter.onReceivedSelectedDrawWeapon(playerId,event.weapon)
+                        gamePresenter.onReceivedSelectedDrawWeapon(playerId, event.weapon)
                         println(event.weapon)
+                    }
+                    is PlayerRequestEvent.AddFlag -> {
+                        gamePresenter.addFlag(playerId, event.coordinate)
+                    }
+                    is PlayerRequestEvent.AddTrap -> {
+                        gamePresenter.addTrap(playerId, event.coordinate)
+                    }
+                    is PlayerRequestEvent.ShuffleElements -> {
+                        gamePresenter.shuffle(playerId)
+                    }
+                    is PlayerRequestEvent.JoinGameRequest -> {
+                        if (!playersSessions.containsKey(sessionId)) {
+                            gamePresenter.onAddPlayer(sessionId)
+                        }
+
+                    }
+                    is PlayerRequestEvent.MoveCharRequest -> {
+                        gamePresenter.onMoveChar(playerId, event.fromCoordinate, event.toCoordinate)
+
+                    }
+                    is PlayerRequestEvent.StartGame -> {
+                        gamePresenter.onPlayerReady(playerId)
                     }
                 }
             }

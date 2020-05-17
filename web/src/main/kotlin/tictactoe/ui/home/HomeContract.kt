@@ -27,6 +27,8 @@ interface HomeContract {
         fun reset()
         fun joinGame()
         fun onWeaponChoosed(weapon: Weapon)
+        fun shuffleElements()
+        fun startGame()
     }
 
     interface HomeViewState : RState {

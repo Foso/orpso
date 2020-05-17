@@ -32,11 +32,6 @@ class GameApiHandler {
 
         when (type) {
 
-            ClientCommands.TURN -> {
-                val resource = ClientCommandParser.getTurnCommand(json)
-                observer.onTurn(resource)
-            }
-
             ClientCommands.STATE_CHANGED -> {
                 val gameState = ClientCommandParser.getGameStateChangedCommand(json).state
                 observer.onGameStateChanged(gameState)

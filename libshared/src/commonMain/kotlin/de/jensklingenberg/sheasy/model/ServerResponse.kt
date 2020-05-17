@@ -10,13 +10,7 @@ enum class MatchState {
 }
 
 enum class ClientCommands {
-     ERROR, TURN, STATE_CHANGED, MESSAGE, PLAYER_EVENT
-}
-
-@Serializable
-sealed class PlayerResponseEvent {
-    @Serializable
-    class JOINED(val yourPlayer: Player) : PlayerResponseEvent()
+     ERROR,  STATE_CHANGED, MESSAGE, PLAYER_EVENT
 }
 
 @Serializable
@@ -34,14 +28,10 @@ sealed class ServerResponse(val id: Int) {
     @Serializable
     class MessageEvent(val message: String) : ServerResponse(ClientCommands.MESSAGE.ordinal)
 
-    @Serializable
-    class TurnEvent(val turn: CurrentTurn, val nextPlayerId: Int) : ServerResponse(ClientCommands.TURN.ordinal)
+
 
 }
 
-fun ServerResponse.TurnEvent.toJson(): String {
-    return Json(JsonConfiguration.Stable).stringify(ServerResponse.TurnEvent.serializer(), this)
-}
 
 fun ServerResponse.PlayerEvent.toJson(): String {
     return Json(JsonConfiguration.Stable).stringify(ServerResponse.PlayerEvent.serializer(), this)

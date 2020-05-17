@@ -36,7 +36,9 @@ allprojects {
 kotlin {
     target {
         useCommonJs()
-        browser {}
+        browser {
+
+        }
     }
 }
 def kotlin_wrappers_version = 'pre.94-kotlin-1.3.70' // for kotlin-wrappers
@@ -56,7 +58,7 @@ dependencies {
     implementation 'org.jetbrains:kotlin-react-router-dom:5.1.2-pre.104-kotlin-1.3.72'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:0.20.0"
 
-    implementation 'com.badoo.reaktive:reaktive-js:1.1.12'
+    implementation 'com.badoo.reaktive:reaktive-js:1.1.13'
     implementation(npm('react', libs.react_version))
 
     implementation(npm('@material-ui/core', libs.material_ui_core))

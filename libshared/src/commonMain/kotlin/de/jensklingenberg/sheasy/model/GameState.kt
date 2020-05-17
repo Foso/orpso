@@ -4,8 +4,18 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class GameState {
+
+    /**
+     * Initial State for clients
+     */
     @Serializable
-    object NewGame : GameState()
+    object NotConnected : GameState()
+
+    /**
+     * A player is waiting for other players
+     */
+    @Serializable
+    object Matchmaking : GameState()
 
     @Serializable
     object Lobby : GameState()
