@@ -13,16 +13,16 @@ class GameSettings {
 
 class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsGameContract.Presenter {
 
-    private val MAX_PLAYERS = 1
+    private val MAX_PLAYERS = 2
     private val playerList = mutableListOf<Player>()
     private var gameState: GameState = GameState.Lobby
     private var activePlayerId = 0
     private var attacker: Attacker? = null
+    var game = Array<Array<Element>>(GameSettings.ROWS) { Array(GameSettings.COLS) { Background() } }
     private val elementList = mutableListOf<Warrior>()
     private var attackerDrawWeaponPlayer: Weapon? = null
     private var defenderDrawWeaponPlayer: Weapon? = null
-    val readyPlayerIds: ArrayList<Int> = arrayListOf()
-    val gameMap: MutableMap<Coordinate, Warrior> = mutableMapOf<Coordinate, Warrior>()
+    private val readyPlayerIds: ArrayList<Int> = arrayListOf()
 
 
     init {
@@ -31,9 +31,19 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
 
     private fun setupInitialList() {
         (0 until GameSettings.COLS).forEach {
+            game[0][it] = Warrior(Player(1, "X", ""), Weapon.Hidden, Coordinate(0, it))
             elementList.add(Warrior(Player(1, "X", ""), Weapon.Hidden, Coordinate(0, it)))
+
+            game[1][it] = Warrior(Player(1, "X", ""), Weapon.Hidden, Coordinate(1, it))
             elementList.add(Warrior(Player(1, "X", ""), Weapon.Hidden, Coordinate(1, it)))
+
+            game[GameSettings.ROWS - 2][it] =
+                Warrior(Player(0, "X", ""), Weapon.Hidden, Coordinate(GameSettings.ROWS - 2, it))
+
             elementList.add(Warrior(Player(0, "X", ""), Weapon.Hidden, Coordinate(GameSettings.ROWS - 2, it)))
+
+            game[GameSettings.ROWS - 2][it] =
+                Warrior(Player(0, "X", ""), Weapon.Hidden, Coordinate(GameSettings.ROWS - 1, it))
             elementList.add(Warrior(Player(0, "X", ""), Weapon.Hidden, Coordinate(GameSettings.ROWS - 1, it)))
         }
     }
@@ -52,8 +62,6 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
     }
 
     override fun onReset() {
-        println("RESET GAME")
-
         sendGameStateChanged(GameState.Started)
     }
 
@@ -133,50 +141,57 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
     }
 
     override fun addFlag(playerId: Int, coordinate: Coordinate) {
+        println("addFlag")
+
         addWeapon(playerId, coordinate, Weapon.Flag)
+        sendGameMap()
     }
 
     override fun addTrap(playerId: Int, coordinate: Coordinate) {
+        println("addTrap")
         addWeapon(playerId, coordinate, Weapon.Trap)
         fillElementsForPlayer(playerId)
         sendGameMap()
     }
 
-    fun fillElementsForPlayer(playerId: Int) {
-        val flag = elementList.find { it.owner.id == playerId && it.weapon == Weapon.Flag }
-        val trap = elementList.find { it.owner.id == playerId && it.weapon == Weapon.Trap }
+    private fun fillElementsForPlayer(playerId: Int) {
 
+        val findPlayerWarriors = elementList.filter { it.owner.id == playerId }
+        val flag = findPlayerWarriors.find { it.owner.id == playerId && it.weapon == Weapon.Flag }
+        val trap = findPlayerWarriors.find { it.owner.id == playerId && it.weapon == Weapon.Trap }
         //4 Schere, 4 Papier, 4 Rock
 
-        var tempWeaponList = arrayListOf<Weapon>()
+        findPlayerWarriors.forEach {
+            elementList.remove(it)
+        }
+
+        val tempWeaponList = arrayListOf<Weapon>()
 
         repeat(4) {
             tempWeaponList.add(Weapon.Scissors)
             tempWeaponList.add(Weapon.Rock)
             tempWeaponList.add(Weapon.Paper)
         }
+        tempWeaponList.add(Weapon.Trap)
+        tempWeaponList.add(Weapon.Flag)
 
-        tempWeaponList.shuffle()
+        // tempWeaponList.shuffle()
+        (0 until GameSettings.COLS).forEachIndexed { index, weapon ->
+            println("INDEX" + index)
+            val col1 = index
+            val col2 = index + 7
+            val weapon1 = tempWeaponList[col1]
+            val weapon2 = tempWeaponList[col2]
 
-        tempWeaponList.forEachIndexed { index, weapon ->
-            if (playerId == 0) {
-                var row = 0
-
-                if (index >= 7) {
-                    row = 1
-                }
-                elementList.add(Warrior(Player(playerId, "", ""), weapon, Coordinate(row, index)))
-            }
             if (playerId == 1) {
-                var row = 5
-
-                if (index >= 7) {
-                    row = 6
-                }
-                elementList.add(Warrior(Player(playerId, "", ""), weapon, Coordinate(row, index)))
+                elementList.add(Warrior(Player(playerId, "", ""), weapon1, Coordinate(0, col1)))
+                elementList.add(Warrior(Player(playerId, "", ""), weapon2, Coordinate(1, col2)))
+            }
+            if (playerId == 0) {
+                elementList.add(Warrior(Player(playerId, "", ""), weapon1, Coordinate(GameSettings.ROWS - 2, col1)))
+                elementList.add(Warrior(Player(playerId, "", ""), weapon2, Coordinate(GameSettings.ROWS - 1, col1)))
             }
         }
-
 
     }
 
@@ -190,7 +205,6 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
                     it
                 }
             }
-            sendGameMap()
 
         }
     }
@@ -283,6 +297,7 @@ class RpsGamePresenter(private val server: RpsGameContract.RpsGameServer) : RpsG
             val newEle = hideElements(it.id, elementList)
 
             val json = ServerResponse.GameStateChanged(GameState.GameUpdate(newEle)).toJson()
+            print("Player" + it + "," + json)
             server.sendData(it.id, json)
         }
     }

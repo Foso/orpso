@@ -57,6 +57,7 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
                 }
 
                 is GameState.Lobby -> {
+                    view.setgameStateText("SET YOUR FLAG")
                 }
                 is GameState.Ended -> {
                     window.alert("PLAYER ${state.winnerID} HAS WON " + state.isWon)
@@ -84,11 +85,11 @@ class HomePresenter(private val view: HomeContract.View) : HomeContract.Presente
                 if(!flagIsSet){
                     flagIsSet=  elementList.any { it.owner.id == playerId && it.weapon is Weapon.Flag }
                     console.log("FLAG EXIST"+flagIsSet)
+
                 }
                 if(!trapIsSet){
                     trapIsSet=  elementList.any { it.owner.id == playerId && it.weapon is Weapon.Trap }
                     console.log("Trap EXIST"+trapIsSet)
-
                 }
 
                 val imgList = elementList.map {
